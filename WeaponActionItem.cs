@@ -9,7 +9,7 @@ public class WeaponItemAction : ScriptableObject
     {
         playerPerformingAction.currentWeaponBeingUsed = weaponPerformingAction.itemID;
 
-        Debug.Log("Action!");
+        //Debug.Log("Action!");
     }
  
     

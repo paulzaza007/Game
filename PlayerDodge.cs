@@ -44,9 +44,10 @@ public class PlayerDodge : MonoBehaviour
         if (Player.instance.playerStatManager.currentStamina < dodgeStaminaCost)
             return;
 
-        if (Player.instance.playerInput.moveAmout > 0 && Player.instance.characterController.isGrounded)
+        if (Player.instance.playerInput.moveAmount > 0 && Player.instance.characterController.isGrounded)
         {
             Player.instance.playerCurrentState.isPerformingAction = true;
+            Player.instance.playerCurrentState.isRolling = true;
             rollDirection = CameraPlayer.instance.cameraObject.transform.forward * Player.instance.playerInput.verticalInput;
             rollDirection += CameraPlayer.instance.cameraObject.transform.right * Player.instance.playerInput.horizontalInput;
             rollDirection.y = 0;
@@ -55,7 +56,7 @@ public class PlayerDodge : MonoBehaviour
             transform.rotation = Quaternion.LookRotation(rollDirection);
 
             // ✅ ใช้ Root Motion ตอนกลิ้งไปข้างหน้า
-            Player.instance.playerAnimatorManger.PlayerTargetActionAnimation("Rolling", true, true);
+            Player.instance.playerAnimatorManager.PlayerTargetActionAnimation("Rolling", true, true);
             Player.instance.playerStatManager.currentStamina -= dodgeStaminaCost;
             Player.instance.playerStatManager.ResetStaminaRegenTimer();
 

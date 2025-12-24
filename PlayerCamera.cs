@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -24,7 +25,7 @@ public class CameraPlayer : MonoBehaviour
     [Header("Camera Values")]
     private Vector3 cameraVelocity;
     private float leftAndRightLookAngle;
-    private float upAndDownLookAngle;
+    [SerializeField] float upAndDownLookAngle;
     private float cameraZPosition;
     private float targetCameraZPosition;
     private float cameraZVelocity;
@@ -33,6 +34,14 @@ public class CameraPlayer : MonoBehaviour
     [SerializeField] float lockOnRadius = 20;
     [SerializeField] float minimumViewAngle = -50;
     [SerializeField] float maximumViewAngle = 50;
+    [SerializeField] float unlockCameraHeight = 0;
+    [SerializeField] float lockCameraHeight = 2;
+    [SerializeField] float lockOnTargetFollowSpeed = 10f;
+    [SerializeField] float setCameraHeightSpeed = 1;
+    [SerializeField] float lockOnAngleX = 15f;
+    [SerializeField] float unlockOnAngleX = 0;
+    [SerializeField] float lockOnCameradistance;
+    private Coroutine cameraLockOnHeightCoroutine;
     
     // เปลี่ยน Type เป็น AICharacterManager เพื่อให้รองรับศัตรู
     private List<AICharacterManager> avalibleTargets = new List<AICharacterManager>();
@@ -169,7 +178,7 @@ public class CameraPlayer : MonoBehaviour
             // เปลี่ยนมาหา AICharacterManager แทน Player
             AICharacterManager character = colliders[i].GetComponent<AICharacterManager>();
 
-            if(character != null)
+            if(character != null && !character.aICurrentState.isDead)
             {
                 // ตรวจสอบมุมมอง
                 Vector3 lockOntargetsDirection = character.transform.position - player.position;
@@ -220,16 +229,85 @@ public class CameraPlayer : MonoBehaviour
             }
         }
     }
-}
-/*private void Rotation()
+
+    public void SetLockCameraHeight()
     {
-        float mouseX = cameraInput.x * sensitivityX;
-        float mouseY = cameraInput.y * sensitivityY;
+        if(cameraLockOnHeightCoroutine != null)
+        {
+            StopCoroutine(cameraLockOnHeightCoroutine);
+        }
 
-        leftAndRightLookAngle += mouseX;
-        upAndDownLookAngle -= mouseY;
-        upAndDownLookAngle = Mathf.Clamp(upAndDownLookAngle, minimumPivot, maximumPivot);
+        cameraLockOnHeightCoroutine = StartCoroutine(SetCameraHeight());
+    }
 
-        transform.rotation = Quaternion.Euler(0f, leftAndRightLookAngle, 0f);
-        cameraPivotTransform.localRotation = Quaternion.Euler(upAndDownLookAngle, 0f, 0f);
-    }*/
+    public void ClearLockTarget()
+    {
+        nearestLockOnTarget = null;
+    }
+
+    public IEnumerator WaitThenFindNewTarget()
+    {
+        while (Player.instance.playerCurrentState.isPerformingAction)
+        {
+            yield return null;
+        }
+
+        ClearLockTarget();
+        HandleLocatingLockOnTarget();
+
+        if(nearestLockOnTarget != null)
+        {
+            Player.instance.playerCombatManager.SetLockOnTarget(nearestLockOnTarget);
+            Player.instance.playerCurrentState.isLockTarget = true;
+        }
+
+        yield return null;
+    }
+
+    private IEnumerator SetCameraHeight()
+    {
+        float duration = 3.5f;
+        float timer = 0;
+
+        Vector3 velocity = Vector3.zero;
+        Vector3 newLockCameraHeight = new Vector3(cameraPivotTransform.transform.localPosition.x, lockCameraHeight, cameraPivotTransform.transform.localPosition.z - lockOnCameradistance);
+        Vector3 newUnlockCameraHeight = new Vector3(cameraPivotTransform.transform.localPosition.x, unlockCameraHeight, cameraPivotTransform.transform.localPosition.z + lockOnCameradistance);
+
+        // สร้างตัวแปรมารอไว้เลย จะได้เรียกใช้ง่ายๆ
+        Quaternion targetLockRotation = Quaternion.Euler(lockOnAngleX, 0, 0);
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+
+            if (Player.instance.playerCombatManager.lockedOnEnemy != null)
+            {
+                cameraPivotTransform.transform.localPosition = Vector3.SmoothDamp(cameraPivotTransform.transform.localPosition, newLockCameraHeight, ref velocity, setCameraHeightSpeed);
+                cameraPivotTransform.transform.localRotation = Quaternion.Slerp(cameraPivotTransform.transform.localRotation, targetLockRotation, lockOnTargetFollowSpeed * Time.deltaTime);
+                upAndDownLookAngle = lockOnAngleX;
+            }
+            else
+            {
+                cameraPivotTransform.transform.localPosition = Vector3.SmoothDamp(cameraPivotTransform.transform.localPosition, newUnlockCameraHeight, ref velocity, setCameraHeightSpeed);
+            }
+
+            yield return null;
+        }
+
+
+        if (Player.instance.playerCombatManager.lockedOnEnemy != null)
+        {
+            cameraPivotTransform.transform.localPosition = newLockCameraHeight;
+            cameraPivotTransform.transform.localRotation = targetLockRotation;
+            upAndDownLookAngle = lockOnAngleX;
+
+        }
+        else
+        {
+            cameraPivotTransform.transform.localPosition = newUnlockCameraHeight;
+
+        }
+
+        yield return null;
+    }
+}

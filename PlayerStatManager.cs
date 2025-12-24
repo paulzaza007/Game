@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class PlayerStatManager : MonoBehaviour
+public class PlayerStatManager : CharacterStatManager
 {
     [Header("Stamin Stats")]
     public float endurance = 1f;
@@ -13,10 +13,6 @@ public class PlayerStatManager : MonoBehaviour
     [SerializeField] float staminaRegenerationDelay = 2;
     [SerializeField] float staminaRegenerateAmount = 0.5f;
 
-    [Header("Health Stats")]
-    public float vitality = 1;
-    public float currentHealth = 100;
-    public float baseHealth = 100;
 
     private void Start()
     {
@@ -27,7 +23,7 @@ public class PlayerStatManager : MonoBehaviour
     {
         passCurrentStaminaValue();
         passCurrentHealthValue();
-        RefreshStats();
+        //RefreshStats();
         CheckHP();
     }
 
@@ -89,6 +85,14 @@ public class PlayerStatManager : MonoBehaviour
         staminaRegenerationTimer = 0;        
     }
 
+    public void CheckStamina()
+    {
+        if (currentStamina > baseStamina * endurance)
+        {
+            currentStamina = baseStamina * endurance;
+        }
+    }
+
     public void calculateHealthBasedOnVitalityLevel()
     {
         float maxHealth = baseHealth * vitality;
@@ -98,7 +102,7 @@ public class PlayerStatManager : MonoBehaviour
 
     public void CheckHP()
     {
-        if(currentHealth <= 0)
+        if (currentHealth <= 0)
         {
             if (Player.instance.playerCurrentState.isDead)
             {
@@ -107,17 +111,9 @@ public class PlayerStatManager : MonoBehaviour
             StartCoroutine(Player.instance.ProcessDeathEvent());
         }
 
-        if(currentHealth > baseHealth * vitality)
+        if (currentHealth > baseHealth * vitality)
         {
-            currentHealth = baseHealth * endurance;
-        }
-    }
-
-    public void CheckStamina()
-    {
-        if (currentStamina > baseStamina * endurance)
-        {
-            currentStamina = baseStamina * endurance;
+            currentHealth = baseHealth * vitality;
         }
     }
 }

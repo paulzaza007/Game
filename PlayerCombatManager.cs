@@ -1,8 +1,12 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerCombatManager : MonoBehaviour
 {
     protected Player player;
+
+    [Header("Last Attack Animation Perform")]
+    public string lastAttackAnimationPerform;
 
     [Header("Attack Target")]
     public Player currentTarget;
@@ -15,6 +19,14 @@ public class PlayerCombatManager : MonoBehaviour
     public Transform LockOnTargetTransform;
 
     public WeaponItem currentWeaponBeingUsed;
+
+    [Header("Flags")]
+    public bool canComboWithMainHandWeapon = false;
+    //public bool canComboWithOffHandWeapon = false;
+
+    [Header("Attack Cooldown")]
+    [SerializeField] public bool readyToPerformAttack = true;
+    [SerializeField] float waitingTime = 2;
 
 
     protected virtual void Awake()
@@ -33,7 +45,6 @@ public class PlayerCombatManager : MonoBehaviour
 
     public void DrainStaminaBasedOnAttack()
     {
-        Debug.Log("Working!");
         if(currentWeaponBeingUsed == null)
         {
             return;
@@ -51,7 +62,7 @@ public class PlayerCombatManager : MonoBehaviour
         }
 
         player.playerStatManager.currentStamina -= Mathf.RoundToInt(staminaDeducted);
-        Debug.Log(staminaDeducted + "Stamina has been used");
+        //Debug.Log(staminaDeducted + "Stamina has been used");
     }
 
     public void SetLockOnTarget(AICharacterManager newTarget)
@@ -59,10 +70,12 @@ public class PlayerCombatManager : MonoBehaviour
         if(newTarget != null)
         {
             lockedOnEnemy = newTarget;
+            CameraPlayer.instance.SetLockCameraHeight();
         }
         else
         {
             lockedOnEnemy = null;
+            CameraPlayer.instance.SetLockCameraHeight();
         }
     }
 
@@ -78,5 +91,20 @@ public class PlayerCombatManager : MonoBehaviour
             currentTarget = null;
         }
     }
- 
+
+    public void AttackCoolDown()
+    {
+        StartCoroutine(WaitForAnotherAttack01());
+    }
+
+    public IEnumerator WaitForAnotherAttack01()
+    {
+        readyToPerformAttack = false;
+
+        yield return new WaitForSeconds(waitingTime);
+
+        readyToPerformAttack = true;
+    }
+
+
 }

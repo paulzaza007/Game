@@ -13,13 +13,20 @@ public class WeaponLocation : MonoBehaviour
         }
     }
 
-    public void LoadWeapon(GameObject weaponModel)
+    public GameObject LoadWeapon(GameObject weaponModel)
     {
-        currentWeaponModel = weaponModel;
-        weaponModel.transform.parent = transform;
+        UnloadWeapon();
+
+        if (weaponModel == null)
+        {
+            return null;
+        }
+        currentWeaponModel = Instantiate(weaponModel, transform);
 
         weaponModel.transform.localPosition = Vector3.zero;
         weaponModel.transform.localRotation = Quaternion.identity;
         weaponModel.transform.localScale = Vector3.one;
+
+        return currentWeaponModel;
     }
 }

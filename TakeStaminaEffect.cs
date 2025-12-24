@@ -6,13 +6,13 @@ public class TakeStaminaEffect : InstantPlayerEffect
 {
     public float staminaDamage;
 
-    public override void ProcessEffect(Player player)
+    public override void ProcessEffect(CharacterManager character)
     {
-        CalculateStaminaDamage(player);
+        CalculateStaminaDamage(character);
     }
 
-    private void CalculateStaminaDamage(Player player)
+    private void CalculateStaminaDamage(CharacterManager character)
     {
-        Player.instance.playerStatManager.currentStamina -= staminaDamage;
+        character.playerStatManager.currentStamina -= staminaDamage;
     }
 }

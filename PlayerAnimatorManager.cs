@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -92,6 +93,7 @@ public class PlayerAnimatorManger : MonoBehaviour
     }
 
     public void PlayerTargetAttackActionAnimation(
+        Player player,
         AttackType attackType,
         string targetAnimation,
         bool performingActionFlag,
@@ -99,15 +101,48 @@ public class PlayerAnimatorManger : MonoBehaviour
         bool canRotate = false,
         bool canMove = false)
     {
-        Player.instance.playerCombatManager.currentAttackType = attackType;
-        Player.instance.playerCurrentState.isPerformingAction = performingActionFlag;
-        Player.instance.playerCurrentState.applyRootMotion = applyRootMotion;
-        Player.instance.playerCurrentState.canRotate = canRotate;
-        Player.instance.playerCurrentState.canMove = canMove;
+        player.playerCombatManager.currentAttackType = attackType;
+        player.playerCombatManager.lastAttackAnimationPerform = targetAnimation;
+        player.playerCurrentState.isPerformingAction = performingActionFlag;
+        player.playerCurrentState.applyRootMotion = applyRootMotion;
+        player.playerCurrentState.canRotate = canRotate;
+        player.playerCurrentState.canMove = canMove;
 
         //เปิด Root Motion ใน Animator
-        Player.instance.animator.applyRootMotion = applyRootMotion;
+        player.animator.applyRootMotion = applyRootMotion;
 
-        Player.instance.animator.CrossFade(targetAnimation, 0.2f);
+        player.animator.CrossFade(targetAnimation, 0.2f);
+    }
+
+    private Coroutine closeComboCoroutine;
+
+    public void EnableCanDoCombo()
+    {
+        if (Player.instance.isUsingRightHand)
+        {
+            Player.instance.playerCombatManager.canComboWithMainHandWeapon = true;
+            if (closeComboCoroutine != null)
+            {
+                StopCoroutine(closeComboCoroutine);
+            }
+
+            closeComboCoroutine = StartCoroutine(CloseCombo());
+        }
+        else
+        {
+
+        }
+    }
+
+    private IEnumerator CloseCombo()
+    {
+        yield return new WaitForSeconds(1.5f);
+        DisableCanDoCombo();
+        closeComboCoroutine = null;
+    }
+
+    public void DisableCanDoCombo()
+    {
+        Player.instance.playerCombatManager.canComboWithMainHandWeapon = false;
     }
 }

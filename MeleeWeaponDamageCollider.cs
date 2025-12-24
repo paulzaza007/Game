@@ -3,14 +3,20 @@ using UnityEngine;
 public class MeleeWeaponDamageCollider : DamageCollider
 {
     [Header("Attacking Character")]
-    public Player playerCausingDamage;
+    public CharacterManager characterCausingDamage;
 
     [Header("Weapon Attack Modifiers")]
     public float light_Attack_01_Modifier;
+    public float light_Attack_02_Modifier;
+    public float light_Attack_03_Modifier;
+    public float heavy_Attack_01_Modifier;
+    public float charge_Attack_01_Modifier;  
 
     protected override void Awake()
     {
         base.Awake();
+
+        characterCausingDamage = GetComponentInParent<CharacterManager>();
 
         if(damageCollider == null)
         {
@@ -22,9 +28,9 @@ public class MeleeWeaponDamageCollider : DamageCollider
 
     protected override void OnTriggerEnter(Collider other)
     {
-        Player damageTarget = other.GetComponentInParent<Player>();
+        CharacterManager damageTarget = other.GetComponentInParent<CharacterManager>();
 
-        if(damageTarget == playerCausingDamage)
+        if(damageTarget == characterCausingDamage)
             return;
 
         if(damageTarget != null)
@@ -35,13 +41,13 @@ public class MeleeWeaponDamageCollider : DamageCollider
         }
     }
 
-    protected override void DamageTarget(Player damageTarget)
+    protected override void DamageTarget(CharacterManager damageTarget)
     {
-        if (playerDamaged.Contains(damageTarget))
+        if (characterDamaged.Contains(damageTarget))
         {
             return;
         }
-        playerDamaged.Add(damageTarget);
+        characterDamaged.Add(damageTarget);
 
         TakeDamageEffect damageEffect = Instantiate(WorldPlayerEffectManager.instance.takeDamageEffect);
         damageEffect.physicalDamage = physicalDamage;
@@ -50,18 +56,31 @@ public class MeleeWeaponDamageCollider : DamageCollider
         damageEffect.lightningDamage = lightningDamage;
         damageEffect.holyDamage = holyDamage;
         damageEffect.contactPoint = contactPoint;
-        damageEffect.angleHitFrom = Vector3.SignedAngle(playerCausingDamage.transform.forward, damageTarget.transform.forward, Vector3.up);
+        damageEffect.angleHitFrom = Vector3.SignedAngle(characterCausingDamage.transform.forward, damageTarget.transform.forward, Vector3.up);
 
-        switch (playerCausingDamage.playerCombatManager.currentAttackType)
+        switch (characterCausingDamage.playerCombatManager.currentAttackType)
         {
             case AttackType.LightAttack01:
                 ApplyAttackDamageModifier(light_Attack_01_Modifier, damageEffect);
                 break;
+            case AttackType.LightAttack02:
+                ApplyAttackDamageModifier(light_Attack_02_Modifier, damageEffect);
+                break;
+            case AttackType.LightAttack03:
+                ApplyAttackDamageModifier(light_Attack_03_Modifier, damageEffect);
+                break;
+            case AttackType.HeavyAttack01:
+                ApplyAttackDamageModifier(heavy_Attack_01_Modifier, damageEffect);
+                break;
+            case AttackType.ChargeAttack01:
+                ApplyAttackDamageModifier(charge_Attack_01_Modifier, damageEffect);
+                break;
+
             default:
                 break;
         }
 
-        //Player.instance.playerEffectManager.ProcessInstantEffect(damageEffect);
+        damageTarget.playerEffectManager.ProcessInstantEffect(damageEffect);
     }
 
     private void ApplyAttackDamageModifier(float modifier, TakeDamageEffect damage)

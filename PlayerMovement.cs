@@ -1,8 +1,12 @@
 using UnityEngine;
 using System.Collections;
+using Unity.VisualScripting;
 
 public class PlayerMovement : MonoBehaviour
 {
+    private Player player;
+    [SerializeField ] CameraPlayer playerCamera;
+
     [SerializeField] float verticalMovement;
     [SerializeField] float horizontalMovement;
 
@@ -15,6 +19,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float gravity = 19.81f;
     [SerializeField] float jumpCooldown = 0.5f;
     [SerializeField] float rotationSpeed = 10f;
+    [SerializeField] float rotationSpeedWhenLockOn = 30f;
 
     [Header("Stat Setting")]
     [SerializeField] float sprintingStaminaCost = 20f;
@@ -42,6 +47,7 @@ public class PlayerMovement : MonoBehaviour
     private void Awake()
     {
         speed = walkingSpeed; 
+        player = GetComponent<Player>();
     }
 
     private void OnEnable()
@@ -66,107 +72,171 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isRunning)
         {
-            if (Player.instance.playerStatManager.currentStamina <= 0)
+            if (player.playerStatManager.currentStamina <= 0)
             {
                 speed = walkingSpeed;
                 return;
             }
+            player.playerCurrentState.isSprinting = true;
             speed = sprintSpeed;
-            Player.instance.playerStatManager.currentStamina -= sprintingStaminaCost * Time.deltaTime;
-            Player.instance.playerStatManager.ResetStaminaRegenTimer();
+            player.playerStatManager.currentStamina -= sprintingStaminaCost * Time.deltaTime;
+            player.playerStatManager.ResetStaminaRegenTimer();
         }
         else
         {
+            player.playerCurrentState.isSprinting = false;
             speed = walkingSpeed;
         }
     }
     
     private void GetHorizontalAndVerticalInput()
     {
-        horizontalMovement = Player.instance.playerInput.horizontalInput;
-        verticalMovement = Player.instance.playerInput.verticalInput;
+        horizontalMovement = player.playerInput.horizontalInput;
+        verticalMovement = player.playerInput.verticalInput;
     }
 
     private void GroundMovement()
     {
         FallingCheck();
         ApplyGravity();
-        if (!Player.instance.playerCurrentState.canMove)
+        if (!player.playerCurrentState.canMove)
             return;
-        Vector3 horizontalMove = CameraPlayer.instance.transform.forward * verticalMovement;
-        horizontalMove += CameraPlayer.instance.transform.right * horizontalMovement;
+        Vector3 horizontalMove = playerCamera.transform.forward * verticalMovement;
+        horizontalMove += playerCamera.transform.right * horizontalMovement;
         horizontalMove.Normalize();
         horizontalMove *= speed;
 
+        var playerInput = player.playerInput;
+
         horizontalMove.y = moveDirection.y;
-        if (isRunning)
+        if (!player.playerCurrentState.isLockTarget)
         {
-            Player.instance.playerAnimatorManger.UpdateAnimatorMovement(0, Player.instance.playerInput.moveAmout + 0.5f);
+            if (isRunning)
+            {
+                player.playerAnimatorManager.UpdateAnimatorMovement(0, playerInput.moveAmount + 1);
+            }
+            else
+            {
+                player.playerAnimatorManager.UpdateAnimatorMovement(0, playerInput.moveAmount);
+            }
         }
-        else
+        else if(player.playerCurrentState.isLockTarget)
         {
-            Player.instance.playerAnimatorManger.UpdateAnimatorMovement(0, Player.instance.playerInput.moveAmout);
+            if (isRunning)
+            {
+                player.playerAnimatorManager.UpdateAnimatorMovement(0, playerInput.moveAmount + 1);
+            }
+            else
+            {
+                player.playerAnimatorManager.UpdateAnimatorMovement(playerInput.horizontalInput, playerInput.verticalInput);
+            }
         }
+               
         
-        Player.instance.characterController.Move(horizontalMove * Time.deltaTime);
+        
+        player.characterController.Move(horizontalMove * Time.deltaTime);
     }
 
     private void RotationMovement()
     {
-        if (!Player.instance.playerCurrentState.canRotate)
+        if(player.playerCurrentState.isDead)
             return;
-        targetRotationDirection = Vector3.zero;
-        targetRotationDirection = CameraPlayer.instance.cameraObject.transform.forward * verticalMovement;
-        targetRotationDirection += CameraPlayer.instance.cameraObject.transform.right * horizontalMovement;
-        targetRotationDirection.Normalize();
-        targetRotationDirection.y = 0;
 
-        if (targetRotationDirection == Vector3.zero)
-            targetRotationDirection = transform.forward;
+        if (!player.playerCurrentState.canRotate)
+            return;
 
-        Quaternion newRotation = Quaternion.LookRotation(targetRotationDirection);
+        if (player.playerCurrentState.isLockTarget)
+        {
+            if (player.playerCurrentState.isSprinting || player.playerCurrentState.isRolling)
+            {
+                Vector3 targetDirection = Vector3.zero;
+                targetDirection = playerCamera.cameraObject.transform.forward * verticalMovement;
+                targetDirection += playerCamera.cameraObject.transform.right * horizontalMovement;
+                targetDirection.Normalize();
+                targetDirection.y = 0;
+                
+                if(targetDirection == Vector3.zero)
+                {
+                    targetDirection = transform.forward;
+                }
 
-        transform.rotation = Quaternion.Slerp(transform.rotation, newRotation, rotationSpeed * Time.deltaTime);
+                Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+                Quaternion finalRotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                transform.rotation = finalRotation;
+            }
+            else
+            {
+                if(player.playerCombatManager.lockedOnEnemy == null)
+                {
+                    return;
+                }
+
+                Vector3 targetDirection;
+                targetDirection = player.playerCombatManager.lockedOnEnemy.transform.position - transform.position;
+                targetDirection.y = 0;
+                targetDirection.Normalize();
+                Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+                Quaternion finalRotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeedWhenLockOn * Time.deltaTime);
+                transform.rotation = finalRotation;
+            }
+        }
+        
+        else
+        {
+            targetRotationDirection = Vector3.zero;
+            targetRotationDirection = playerCamera.cameraObject.transform.forward * verticalMovement;
+            targetRotationDirection += playerCamera.cameraObject.transform.right * horizontalMovement;
+            targetRotationDirection.Normalize();
+            targetRotationDirection.y = 0;
+
+            if (targetRotationDirection == Vector3.zero)
+                targetRotationDirection = transform.forward;
+
+            Quaternion newRotation = Quaternion.LookRotation(targetRotationDirection);
+ 
+            transform.rotation = Quaternion.Slerp(transform.rotation, newRotation, rotationSpeed * Time.deltaTime);
+        }
+        
     }
 
     public IEnumerator DelayJump()
     {
-        if (!Player.instance.playerCurrentState.isJumping)
+        if (!player.playerCurrentState.isJumping)
         {
-            Player.instance.playerCurrentState.isJumping = true;
-            if (Player.instance.characterController.isGrounded)
+            player.playerCurrentState.isJumping = true;
+            if (player.characterController.isGrounded)
             {
-                Player.instance.animator.CrossFade("Jump",0.2f);
-                Player.instance.playerCurrentState.canMove = false;
-                Player.instance.playerCurrentState.canRotate = false;
+                player.animator.CrossFade("Jump",0.2f);
+                player.playerCurrentState.canMove = false;
+                player.playerCurrentState.canRotate = false;
                 yield return new WaitForSeconds(delayJump);
-                if (Player.instance.characterController.isGrounded)
+                if (player.characterController.isGrounded)
                 {
                     jumpRequest = true;
-                    Player.instance.playerCurrentState.canMove = true;
-                    Player.instance.playerCurrentState.canRotate = true;
+                    player.playerCurrentState.canMove = true;
+                    player.playerCurrentState.canRotate = true;
                 }
 
             }
         }
         yield return new WaitForSeconds(1.4f);
-        Player.instance.playerCurrentState.isJumping = false;
+        player.playerCurrentState.isJumping = false;
     }
     
     private void ApplyGravity()
     {
-        if (Player.instance.characterController.isGrounded)
+        if (player.characterController.isGrounded)
         {
             if (jumpRequest 
             && Time.time - lastJumpTime >= jumpCooldown 
-            && !Player.instance.playerCurrentState.isPerformingAction 
-            && Player.instance.playerStatManager.currentStamina >= jumpStaminaCost)
+            && !player.playerCurrentState.isPerformingAction 
+            && player.playerStatManager.currentStamina >= jumpStaminaCost)
             {
                 verticalVelocity = Mathf.Sqrt(2 * jumpHeight * gravity);
                 lastJumpTime = Time.time;
                 
-                Player.instance.playerStatManager.currentStamina -= jumpStaminaCost;
-                Player.instance.playerStatManager.ResetStaminaRegenTimer();
+                player.playerStatManager.currentStamina -= jumpStaminaCost;
+                player.playerStatManager.ResetStaminaRegenTimer();
                 
             }
             else
@@ -176,7 +246,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            if (Player.instance.characterController.collisionFlags == CollisionFlags.Above && verticalVelocity > 0)
+            if (player.characterController.collisionFlags == CollisionFlags.Above && verticalVelocity > 0)
                 verticalVelocity = 0;
 
             verticalVelocity -= gravity * Time.deltaTime;
@@ -188,9 +258,9 @@ public class PlayerMovement : MonoBehaviour
     }
     private void FallingCheck()
     {
-        bool isGrounded = Player.instance.characterController.isGrounded;
-        Player.instance.animator.SetBool("isGround", isGrounded);
-        Player.instance.animator.SetFloat("inAirTimer", inAirTimer);
+        bool isGrounded = player.characterController.isGrounded;
+        player.animator.SetBool("isGround", isGrounded);
+        player.animator.SetFloat("inAirTimer", inAirTimer);
 
         if (!isGrounded)
         {
@@ -198,7 +268,7 @@ public class PlayerMovement : MonoBehaviour
 
             if (inAirTimer >= landingHardTimer)
             {
-                Player.instance.animator.CrossFade("Jump_Idle",0.2f);
+                player.animator.CrossFade("Jump_Idle",0.2f);
             }
         }
 
@@ -207,21 +277,21 @@ public class PlayerMovement : MonoBehaviour
         {
             if (inAirTimer < landingSoftTimer && inAirTimer >= 0.0001f)
             {
-                Player.instance.animator.CrossFade("Empty",0.2f);
+                player.animator.CrossFade("Empty",0.2f);
                 inAirTimer = 0;
             }
             
             
             if (inAirTimer > landingSoftTimer && inAirTimer <= landingHardTimer)
             {
-                Player.instance.playerAnimatorManger.PlayerTargetActionAnimation("LandingSoft", true);
+                player.playerAnimatorManager.PlayerTargetActionAnimation("LandingSoft", true);
                 inAirTimer = 0;
             }
 
 
             if (inAirTimer > landingHardTimer)
             {
-                Player.instance.playerAnimatorManger.PlayerTargetActionAnimation("Landing_Hard", true);
+                player.playerAnimatorManager.PlayerTargetActionAnimation("Landing_Hard", true);
                 inAirTimer = 0;
             }
         }
@@ -232,12 +302,11 @@ public class PlayerMovement : MonoBehaviour
 
     public void ForceFaceForward()
     {
-        Vector3 forward = CameraPlayer.instance.cameraObject.transform.forward;
+        Vector3 forward = playerCamera.cameraObject.transform.forward;
         forward.y = 0;
 
         Quaternion targetRot = Quaternion.LookRotation(forward);
 
-        // หมุนแบบค่อย ๆ หัน (ปรับค่า 10f ได้ตามชอบ)
         transform.rotation = Quaternion.Slerp(transform.rotation,targetRot,Time.deltaTime * 10f);
     }
 

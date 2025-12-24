@@ -15,6 +15,12 @@ public class CharacterManager : MonoBehaviour
     [HideInInspector] public PlayerCombatManager playerCombatManager;
     [HideInInspector] public PlayerSFXManager playerSFXManager;
 
+    [HideInInspector] public AICharacterManager aICharacterManager;
+    [HideInInspector] public Player player;
+
+    [HideInInspector] public CharacterCurrentStat characterCurrentStat;
+    [HideInInspector] public CharacterStatManager characterStatManager;
+
     [Header("Character Group")]
     public CharacterGroup characterGroup;
     
@@ -31,6 +37,14 @@ public class CharacterManager : MonoBehaviour
         playerEquipmentManager = GetComponent<PlayerEquipmentManager>();
         playerCombatManager = GetComponent<PlayerCombatManager>();
         playerSFXManager = GetComponent<PlayerSFXManager>();
+
+        aICharacterManager = GetComponent<AICharacterManager>();
+        player = GetComponent<Player>();
+
+
+        characterCurrentStat = GetComponent<CharacterCurrentStat>();
+        characterStatManager = GetComponent<CharacterStatManager>();
+        
     }
 
     protected virtual void FixedUpdate()

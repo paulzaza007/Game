@@ -8,7 +8,7 @@ public class Player : MonoBehaviour
     [HideInInspector] public CharacterController characterController;
     [HideInInspector] public Animator animator;
 
-    [HideInInspector] public PlayerAnimatorManger playerAnimatorManger;
+    [HideInInspector] public PlayerAnimatorManger playerAnimatorManager;
     [HideInInspector] public PlayerMovement playerMovement;
     [HideInInspector] public PlayerDodge playerDodge;
     [HideInInspector] public PlayerInput playerInput;
@@ -29,6 +29,7 @@ public class Player : MonoBehaviour
     public int currentWeaponBeingUsed;
     public bool isUsingRightHand;
     public bool isUsingLeftHand;
+    public bool isChargingAttack = false;
 
     public int CurrentRightHandWeaponID
     {
@@ -72,20 +73,34 @@ public class Player : MonoBehaviour
         }
     }
 
+    public bool IsChargingAttack
+    {
+        get => isChargingAttack;
+        set
+        {
+            if (isChargingAttack == value) return;
+
+            bool old = isChargingAttack;
+            isChargingAttack = value;
+
+            OnChargingAttack?.Invoke(old, value);
+        }
+    }
+
     public event System.Action<int, int> OnRightHandWeaponIDChanged;
     public event System.Action<int, int> OnLeftHandWeaponIDChanged;
     public event System.Action<int, int> OnWeaponBeingUsed;
-    
+    public event System.Action<bool, bool> OnChargingAttack;
+
 
     protected virtual void Awake()
     {
         instance = this;
-        DontDestroyOnLoad(this);
 
         characterController = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
 
-        playerAnimatorManger = GetComponent<PlayerAnimatorManger>();
+        playerAnimatorManager = GetComponent<PlayerAnimatorManger>();
         playerMovement = GetComponent<PlayerMovement>();
         playerDodge = GetComponent<PlayerDodge>();
         playerInput = GetComponent<PlayerInput>();
@@ -100,6 +115,7 @@ public class Player : MonoBehaviour
         OnRightHandWeaponIDChanged += OnCurrentRightHandWeaponIDChange;
         OnLeftHandWeaponIDChanged += OnCurrentLeftHandWeaponIDChange;
         OnWeaponBeingUsed += OnCurrentWeaponBeingUsedIDChange;
+        OnChargingAttack += OnChargingAttackBoolChange;
 
 
     }
@@ -155,7 +171,7 @@ public class Player : MonoBehaviour
 
         if (!manuallySelectDeathAnimation)
         {
-            playerAnimatorManger.PlayerTargetActionAnimation("Death", true, false);
+            playerAnimatorManager.PlayerTargetActionAnimation("Death", true, false);
         }
 
         PlayerUIManager.instance.playerUIPopUpManager.SendYouDiedPopUp();
@@ -167,6 +183,8 @@ public class Player : MonoBehaviour
         WeaponItem newWeapon = Instantiate(WorldItemDatabase.instance.GetWeaponByID(newID));
         playerInventoryManager.currentRightHandWeapon = newWeapon;
         playerEquipmentManager.LoadRightWeapon();
+
+        PlayerUIManager.instance.playerUIHUDManager.SetRightWeaponQuickSlotIcon(newID);
     }
 
     public void OnCurrentLeftHandWeaponIDChange(int oldID, int newID)
@@ -174,7 +192,15 @@ public class Player : MonoBehaviour
         WeaponItem newWeapon = Instantiate(WorldItemDatabase.instance.GetWeaponByID(newID));
         playerInventoryManager.currentLeftHandWeapon = newWeapon;
         playerEquipmentManager.LoadLeftWeapon();
+
+        PlayerUIManager.instance.playerUIHUDManager.SetLeftWeaponQuickSlotIcon(newID);
     }
+
+    public void OnChargingAttackBoolChange(bool oldBool, bool newBool)
+    {
+        animator.SetBool("isCharging", newBool);
+    }
+
     private void IgnoreMyOwnColliders()
     {
         Collider playerControllerCollider = GetComponent<Collider>();
@@ -233,5 +259,7 @@ public class Player : MonoBehaviour
     }
 
     
+
+
 
 }

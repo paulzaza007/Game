@@ -6,7 +6,7 @@ using UnityEngine;
 public class TakeDamageEffect : InstantPlayerEffect
 {
     [Header("Character Causing Damage")]
-    public Player playerCausingDamage;
+    public CharacterManager characterCausingDamage;
 
     [Header("Damage")]
     public float physicalDamage = 0;
@@ -36,25 +36,25 @@ public class TakeDamageEffect : InstantPlayerEffect
     public float angleHitFrom;
     public Vector3 contactPoint; 
 
-    public override void ProcessEffect(Player player)
+    public override void ProcessEffect(CharacterManager character)
     {
-        base.ProcessEffect(player);
+        base.ProcessEffect(character);
 
-        if (player.playerCurrentState.isDead)
+        if (character.characterCurrentStat.isDead)
         {
             return;
         }
 
-        CalculateDamage(player);
-        PlayDirectionalBasedDamageAnimation(player);
-        PlayDamageSFX(player);
-        PlayDamageVFX(player);
+        CalculateDamage(character);
+        //PlayDirectionalBasedDamageAnimation(character);
+        PlayDamageSFX(character);
+        PlayDamageVFX(character);
 
     }
 
-    private void CalculateDamage(Player player)
+    private void CalculateDamage(CharacterManager character)
     {
-        if(playerCausingDamage != null)
+        if(characterCausingDamage != null)
         {
             
         }
@@ -66,62 +66,66 @@ public class TakeDamageEffect : InstantPlayerEffect
             finalDamageDealt = 1;
         }
 
-        player.playerStatManager.currentHealth -= finalDamageDealt;
+        character.characterStatManager.currentHealth -= finalDamageDealt;
 
 
     }
 
-    private void PlayDamageVFX(Player player)
+    private void PlayDamageVFX(CharacterManager character)
     {
-        player.playerEffectManager.PlayBloodSplatterVFX(contactPoint);
+        character.playerEffectManager.PlayBloodSplatterVFX(contactPoint);
     }
 
-    private void PlayDamageSFX(Player player)
+    private void PlayDamageSFX(CharacterManager character)
     {
         AudioClip physicalDamageSFX = WorldSFXManager.instance.ChooseRandomSFXFromArray(WorldSFXManager.instance.physicalDamageSFX);
 
-        player.playerSFXManager.PlaySFX(physicalDamageSFX);
+        character.playerSFXManager.PlaySFX(physicalDamageSFX);
     }
 
-    private void PlayDirectionalBasedDamageAnimation(Player player)
+    private void PlayDirectionalBasedDamageAnimation(CharacterManager character)
     {
-        if (player.playerCurrentState.isDead)
+        if (character.player.playerCurrentState.isDead)
         {
             return;
         }
-        
+        if (character.aICharacterManager.aICurrentState.isDead)
+        {
+            return;
+        }
+
         poiseIsBroken = true;
 
         if(angleHitFrom >= 145 && angleHitFrom <= 180)//หน้า
         {
-            damageAnimation = player.playerAnimatorManger.GetRandomAnimationFromList(player.playerAnimatorManger.forward_Midium_Damage);
+            damageAnimation = character.player.playerAnimatorManager.GetRandomAnimationFromList(character.player.playerAnimatorManager.forward_Midium_Damage);
             //player.playerAnimatorManger.PlayerTargetActionAnimation(player.playerAnimatorManger.hit_Forward_Medium_01, true);
         }
         else if(angleHitFrom <= -145 && angleHitFrom >= -180)//หน้า
         {
-            damageAnimation = player.playerAnimatorManger.GetRandomAnimationFromList(player.playerAnimatorManger.forward_Midium_Damage);
+            damageAnimation = character.player.playerAnimatorManager.GetRandomAnimationFromList(character.player.playerAnimatorManager.forward_Midium_Damage);
             //player.playerAnimatorManger.PlayerTargetActionAnimation(player.playerAnimatorManger.hit_Forward_Medium_01, true);
         }
         else if(angleHitFrom >= -45 && angleHitFrom <= 180)//หลัง
         {
-            damageAnimation = player.playerAnimatorManger.hit_Backward_Medium_01;
+            damageAnimation = character.player.playerAnimatorManager.hit_Backward_Medium_01;
             //player.playerAnimatorManger.PlayerTargetActionAnimation(player.playerAnimatorManger.hit_Backward_Medium_01, true);
         }
         else if(angleHitFrom >= -144 && angleHitFrom <= -45)//ซ้าย
         {
-            damageAnimation = player.playerAnimatorManger.GetRandomAnimationFromList(player.playerAnimatorManger.left_Midium_Damage);
+            damageAnimation = character.player.playerAnimatorManager.GetRandomAnimationFromList(character.player.playerAnimatorManager.left_Midium_Damage);
             //player.playerAnimatorManger.PlayerTargetActionAnimation(player.playerAnimatorManger.hit_Left_Medium_01, true);
         }
         else if(angleHitFrom >= 45 && angleHitFrom <= 144)//ขวา
         {
-            damageAnimation = player.playerAnimatorManger.GetRandomAnimationFromList(player.playerAnimatorManger.right_Midium_Damage);
+            damageAnimation = character.player.playerAnimatorManager.GetRandomAnimationFromList(character.player.playerAnimatorManager.right_Midium_Damage);
             //player.playerAnimatorManger.PlayerTargetActionAnimation(player.playerAnimatorManger.hit_Right_Medium_01, true);
         }
 
         if (poiseIsBroken)
         {
-            player.playerAnimatorManger.lastDamageAnimationPlayed = damageAnimation;
-            player.playerAnimatorManger.PlayerTargetActionAnimation(damageAnimation, true);
+            character.player.playerAnimatorManager.lastDamageAnimationPlayed = damageAnimation;
+            character.player.playerAnimatorManager.PlayerTargetActionAnimation(damageAnimation, true);
         }
     }
     

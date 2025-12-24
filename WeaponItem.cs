@@ -23,6 +23,10 @@ public class WeaponItem : Item
 
     [Header("Attack Modifiers")]
     public float light_Attack_01_Modifier = 1.1f;
+    public float light_Attack_02_Modifier = 0.9f;
+    public float light_Attack_03_Modifier = 1.3f;
+    public float heavy_Attack_01_Modifier = 1.5f;
+    public float charge_Attack_01_Modifier = 2f;
 
     [Header("Stamina Cost Modifiers")]
     public int baseStaminaCost = 5;
@@ -30,7 +34,9 @@ public class WeaponItem : Item
 
     [Header("Actions")]
     public WeaponItemAction oh_LC_Action;
-
-
+    public WeaponItemAction oh_RC_Action;
+ 
+    [Header("Whoosh")]
+    public AudioClip[] whoosh;
 
 }

@@ -9,9 +9,9 @@ public class WeaponManager : MonoBehaviour
         meleeWeaponDamageCollider = GetComponentInChildren<MeleeWeaponDamageCollider>();
     }
 
-    public void SetWeaponDamage(Player characterWieldingWeapon, WeaponItem weaponItem)
+    public void SetWeaponDamage(CharacterManager characterWieldingWeapon, WeaponItem weaponItem)
     {
-        meleeWeaponDamageCollider.playerCausingDamage = characterWieldingWeapon;
+        meleeWeaponDamageCollider.characterCausingDamage = characterWieldingWeapon;
         meleeWeaponDamageCollider.physicalDamage = weaponItem.physicalDamage;
         meleeWeaponDamageCollider.magicDamage = weaponItem.magicDamage;
         meleeWeaponDamageCollider.fireDamage = weaponItem.fireDamage;
@@ -19,5 +19,9 @@ public class WeaponManager : MonoBehaviour
         meleeWeaponDamageCollider.holyDamage = weaponItem.holyDamage;
 
         meleeWeaponDamageCollider.light_Attack_01_Modifier = weaponItem.light_Attack_01_Modifier;
+        meleeWeaponDamageCollider.light_Attack_02_Modifier = weaponItem.light_Attack_02_Modifier;
+        meleeWeaponDamageCollider.light_Attack_03_Modifier = weaponItem.light_Attack_03_Modifier;
+        meleeWeaponDamageCollider.heavy_Attack_01_Modifier = weaponItem.heavy_Attack_01_Modifier;
+        meleeWeaponDamageCollider.charge_Attack_01_Modifier = weaponItem.charge_Attack_01_Modifier;
     }
 }

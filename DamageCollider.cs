@@ -17,7 +17,7 @@ public class DamageCollider : MonoBehaviour
     protected Vector3 contactPoint;
 
     [Header("Player Damaged")]
-    protected List<Player> playerDamaged = new List<Player>();
+    protected List<CharacterManager> characterDamaged = new List<CharacterManager>();
 
     protected virtual void Awake()
     {
@@ -26,24 +26,28 @@ public class DamageCollider : MonoBehaviour
  
     protected virtual void OnTriggerEnter(Collider other)
     {
-        //if(other.gameObject.layer = LayerMask.NameToLayer("Player"))
-        Player damageTarget = other.GetComponentInParent<Player>();
+        Debug.Log("1. Collider Hit: " + other.name);
+        CharacterManager damageTarget = other.GetComponentInParent<CharacterManager>();
+        
 
         if(damageTarget != null)
         {
+            Debug.Log("2. Target Found, HP: " + damageTarget.characterStatManager.currentHealth);
             contactPoint = other.gameObject.GetComponent<Collider>().ClosestPointOnBounds(transform.position);
 
             DamageTarget(damageTarget);
         }
     }
 
-    protected virtual void DamageTarget(Player damageTarget)
+    protected virtual void DamageTarget(CharacterManager damageTarget)
     {
-        if (playerDamaged.Contains(damageTarget))
+        if (characterDamaged.Contains(damageTarget))
         {
+            Debug.Log("3. Skipping: Target already in list!");
             return;
         }
-        playerDamaged.Add(damageTarget);
+        characterDamaged.Add(damageTarget);
+        Debug.Log("ตี");
 
         TakeDamageEffect damageEffect = Instantiate(WorldPlayerEffectManager.instance.takeDamageEffect);
         damageEffect.physicalDamage = physicalDamage;
@@ -53,7 +57,7 @@ public class DamageCollider : MonoBehaviour
         damageEffect.holyDamage = holyDamage;
         damageEffect.contactPoint = contactPoint;
 
-        Player.instance.playerEffectManager.ProcessInstantEffect(damageEffect);
+        //damageTarget.playerEffectManager.ProcessInstantEffect(damageEffect);//bug
     }
 
     public virtual void EnableDamageCollider()
@@ -64,6 +68,7 @@ public class DamageCollider : MonoBehaviour
     public virtual void DisableDamageCollider()
     {
         damageCollider.enabled = false;
-        playerDamaged.Clear();
+        characterDamaged.Clear();
+        Debug.Log("เครียร์ target");
     }
 }

@@ -9,9 +9,8 @@ public class IdleState : AIState
 
         if(aiCharacter.playerCombatManager.currentTarget != null)
         {
-            Debug.Log("WE HAVE A TARGET");
+            return SwitchState(aiCharacter, aiCharacter.purSueTarget);
 
-            return this;
         }
         else
         {
