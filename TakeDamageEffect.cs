@@ -38,6 +38,11 @@ public class TakeDamageEffect : InstantPlayerEffect
 
     public override void ProcessEffect(CharacterManager character)
     {
+        if (character.characterCurrentState.isInvulnerable)
+        {
+            return;
+        }
+
         base.ProcessEffect(character);
 
         if (character.characterCurrentState.isDead)

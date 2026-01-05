@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class PlayerCurrentState : CharacterCurrentState
 {   
+
     [SerializeField] float slideSpeed = 2;
     [SerializeField] float slideDuration = 1f;
     [SerializeField] float runToSlideTiming = 2f;
@@ -26,7 +27,7 @@ public class PlayerCurrentState : CharacterCurrentState
 
     private void Awake()
     {
-        OnSprinting += OnSprintingBoolChanage;
+        //OnSprinting += OnSprintingBoolChanage; ระบบไม่ดี เอาออก
     }
 
     private Coroutine waitToMoveCoroutine;

@@ -7,6 +7,9 @@ public class AICharacterCombatManager : PlayerCombatManager
     [Header("Action Recovery")]
     public float actionRecoveryTimer = 0;
 
+    [Header("Pivot")]
+    public bool enablePivot = true;
+
     [Header("Target Information")]
     public float distanceFromTarget;
     public float viewableAngle;
@@ -56,6 +59,7 @@ public class AICharacterCombatManager : PlayerCombatManager
             {
                 continue;
             }
+            //Debug.Log("เจอPlayerในรัศมี");
 
             if(WorldUtilityManager.instance.CanIDamageThisTarget(aiCharacter.characterGroup, targetCharacter.characterGroup))
             {
@@ -75,7 +79,11 @@ public class AICharacterCombatManager : PlayerCombatManager
                         targetDirection = targetCharacter.transform.position - transform.position;
                         viewableAngle = WorldUtilityManager.instance.GetAngleOfTarget(transform, targetDirection);
                         aiCharacter.playerCombatManager.SetAttackTarget(targetCharacter);
-                        PivotTowardTarget(aiCharacter);
+
+                        if (enablePivot)
+                        {
+                            PivotTowardTarget(aiCharacter);
+                        }
                     }
                 }
             }
@@ -91,19 +99,19 @@ public class AICharacterCombatManager : PlayerCombatManager
 
         if(viewableAngle >= 20 && viewableAngle <= 60)
         {
-            aICharacter.aIAnimationManager.PlayerTargetActionAnimation("45Turn_Right", true);
+            //aICharacter.aIAnimationManager.PlayerTargetActionAnimation("45Turn_Right", true);
         }
         else if (viewableAngle <= -20 && viewableAngle >= -60)
         {
-            aICharacter.aIAnimationManager.PlayerTargetActionAnimation("45Turn_Left", true);
+            //aICharacter.aIAnimationManager.PlayerTargetActionAnimation("45Turn_Left", true);
         }
         else if (viewableAngle >= 61 && viewableAngle <= 110)
         {
-            aICharacter.aIAnimationManager.PlayerTargetActionAnimation("90Turn_Right", true);
+            //aICharacter.aIAnimationManager.PlayerTargetActionAnimation("90Turn_Right", true);
         }
         else if (viewableAngle <= -61 && viewableAngle >= -110)
         {
-            aICharacter.aIAnimationManager.PlayerTargetActionAnimation("90Turn_Left", true);
+            //aICharacter.aIAnimationManager.PlayerTargetActionAnimation("90Turn_Left", true);
         }
     }
 

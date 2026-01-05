@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class WorldObjectManager : MonoBehaviour
 {
-    static WorldObjectManager instance;
+    public static WorldObjectManager instance;
 
     [Header("Fog Walls")]
     public List<FogWallInteractable> fogWalls;
@@ -20,8 +20,20 @@ public class WorldObjectManager : MonoBehaviour
         }
     }
 
-    public void AddFogWallTolist()
+    public void AddFogWallTolist(FogWallInteractable fogWall)
     {
-        
+        if (!fogWalls.Contains(fogWall))
+        {
+            fogWalls.Add(fogWall);
+        }
+    }
+
+    public void RemoveFogWallTolist(FogWallInteractable fogWall)
+    {
+        if (fogWalls.Contains(fogWall))
+        {
+            fogWalls.Remove(fogWall);
+        }
+
     }
 }

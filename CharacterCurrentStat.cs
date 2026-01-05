@@ -13,4 +13,5 @@ public class CharacterCurrentState : MonoBehaviour
     public bool isLockTarget = false;
     public bool isSprinting = false;
     public bool isRolling = false;
+    public bool isInvulnerable = false;
 }

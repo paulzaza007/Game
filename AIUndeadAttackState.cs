@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "A.I/States/UndeadAttack")]
+[CreateAssetMenu(menuName = "A.I/States/Undead/UndeadAttack")]
 
 public class AIUndeadAttackState : AIAttackState
 {
@@ -21,10 +21,10 @@ public class AIUndeadAttackState : AIAttackState
 
         if (willPerformCombo && !hasPerformAttack) // เอาไว้คอมโบ **ตอนนี้ยังไม่มี**
         {
-            if (currentUndeadAttack.comboAction != null)
+            if (currentUndeadAttack.comboAction != null) //****
             {
                 hasPerformCombo = true;
-                currentUndeadAttack.comboAction.AttemptToPerformAction(aICharacter);
+                currentUndeadAttack.comboAction.AttemptToPerformAction(aICharacter); //****
             }
         }
 
@@ -62,9 +62,9 @@ public class AIUndeadAttackState : AIAttackState
     protected override void PerformAttack(AICharacterManager aICharacter)
     {
         hasPerformAttack = true;
-        currentUndeadAttack.AttemptToPerformAction(aICharacter); //เล่นanimation ของUndead
+        currentUndeadAttack.AttemptToPerformAction(aICharacter); //เล่นanimation ของUndead //****
 
-        aICharacter.aICharacterCombatManager.actionRecoveryTimer = currentUndeadAttack.actionRecoveryTime; //ตั้งคูลดาวตามท่าที่ใช้โจมตี ของUndead
+        aICharacter.aICharacterCombatManager.actionRecoveryTimer = currentUndeadAttack.actionRecoveryTime; //ตั้งคูลดาวตามท่าที่ใช้โจมตี ของUndead //****
     }
 
     protected override void ResetStateFlags(AICharacterManager aICharacter)

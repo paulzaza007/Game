@@ -4,7 +4,7 @@ public class AIAnimationManager : MonoBehaviour
 {
     private AICharacterManager aICharacter;
 
-    private void Awake()
+    protected virtual void Awake()
     {
         aICharacter = GetComponent<AICharacterManager>();
     }
@@ -27,25 +27,27 @@ public class AIAnimationManager : MonoBehaviour
         aICharacter.animator.CrossFade(targetAnimation, 0.2f);
     }
 
-    private void OnAnimatorMove()
+    protected virtual void OnAnimatorMove()
     {
         if (aICharacter.navMeshAgent == null || aICharacter.characterController == null) return;
 
-        Vector3 velocity = aICharacter.animator.deltaPosition;
+        Vector3 animationVelocity = aICharacter.animator.deltaPosition;
 
         // แทนที่จะ return เฉยๆ ให้ใส่แรงโน้มถ่วงอ่อนๆ ไว้เสมอ
         // เพื่อให้ Character Controller ทำงาน (Stay Active)
-        if (!aICharacter.IsMoving && aICharacter.characterController.isGrounded)
+        float verticalVelocity = 0;
+        if (aICharacter.characterController.isGrounded)
         {
-            // แรงกดพื้นเล็กน้อยเพื่อให้ระบบฟิสิกส์ยังตรวจสอบการชนอยู่
-            return;
+            verticalVelocity = -0.05f;
         }
         else
         {
-            velocity.y -= aICharacter.gravity * Time.deltaTime;
+            verticalVelocity -= aICharacter.gravity * Time.deltaTime;
         }
+        Vector3 finalVelocity = animationVelocity;
+        finalVelocity.y += verticalVelocity;
 
-        aICharacter.characterController.Move(velocity);
+        aICharacter.characterController.Move(finalVelocity);
         aICharacter.transform.rotation *= aICharacter.animator.deltaRotation;
         aICharacter.navMeshAgent.nextPosition = aICharacter.transform.position;
     }

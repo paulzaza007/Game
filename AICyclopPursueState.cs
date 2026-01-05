@@ -1,22 +1,22 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-[CreateAssetMenu(menuName = "A.I/States/Pursues Target")]
+[CreateAssetMenu(menuName = "A.I/States/Cyclop/Cyclop Pursues Target")]
 
-public class PurSueTargetState : AIState
+public class AICyclopPursueState : PurSueTargetState
 {
-
     public override AIState Tick(AICharacterManager aICharacter)
     {
-        //Debug.Log(aICharacter.navMeshAgent.isOnNavMesh);
+        //Debug.Log("เจอผู้เล่น PURSUE");
         if (aICharacter.aICurrentState.isPerformingAction) //AI ติดอนิเมชั่นอยู่ วนmethodนี้
         {
-            Debug.Log("AI ติด Action อยู่");
             return this;
         }
 
-        if(aICharacter.aICharacterCombatManager.currentTarget == null) //ไม่เจอผู้เล่น กลับไป State idle
+        if (aICharacter.aICharacterCombatManager.currentTarget == null) //ไม่เจอผู้เล่น กลับไป State idle
         {
+            aICharacter.characterSFXManager.StopAllAISounds();
+            //aICharacter.characterSFXManager.PlaySFX(WorldSFXManager.instance.UndeadIdleSFX, 0.1f);
             return SwitchState(aICharacter, aICharacter.idle);
         }
 
@@ -25,22 +25,19 @@ public class PurSueTargetState : AIState
             aICharacter.navMeshAgent.enabled = true;
         }
 
-        if (aICharacter.aICharacterCombatManager.enablePivot)
+        if (aICharacter.aICharacterCombatManager.viewableAngle < aICharacter.aICharacterCombatManager.minimumFOV || aICharacter.aICharacterCombatManager.viewableAngle > aICharacter.aICharacterCombatManager.maximumFOV)
         {
-            if (aICharacter.aICharacterCombatManager.viewableAngle < aICharacter.aICharacterCombatManager.minimumFOV || aICharacter.aICharacterCombatManager.viewableAngle > aICharacter.aICharacterCombatManager.maximumFOV)
-            {
-                aICharacter.aICharacterCombatManager.PivotTowardTarget(aICharacter); //ซ้ายเกินหรือขวาเกิน ให้AIหันหาผู้เล่น แบบอนิเมชั่น
-            }
+            aICharacter.aICharacterCombatManager.PivotTowardTarget(aICharacter); //ซ้ายเกินหรือขวาเกิน ให้AIหันหาผู้เล่น แบบอนิเมชั่น
         }
 
         aICharacter.aIMovementManager.RotateTowardAgent(aICharacter); //หันตามผู้เล่น
 
-        if(aICharacter.aICharacterCombatManager.distanceFromTarget <= aICharacter.navMeshAgent.stoppingDistance) //ถ้าระยะทางระหว่างผู้เล่นกับAIน้อยกว่าระยะหยุดของAIให้เปลี่ยนเป็นStateCombat
+        if (aICharacter.aICharacterCombatManager.distanceFromTarget <= aICharacter.navMeshAgent.stoppingDistance) //ถ้าระยะทางระหว่างผู้เล่นกับAIน้อยกว่าระยะหยุดของAIให้เปลี่ยนเป็นStateCombat
         {
             return SwitchState(aICharacter, aICharacter.combatStance);
         }
         //aICharacter.navMeshAgent.SetDestination(aICharacter.aICharacterCombatManager.currentTarget.transform.position);
- 
+
         // คำนวนเส้นทางAI ไป ผู้เล่น
         NavMeshPath path = new NavMeshPath();
         aICharacter.navMeshAgent.CalculatePath(aICharacter.aICharacterCombatManager.currentTarget.transform.position, path);

@@ -110,5 +110,13 @@ public class PlayerCombatManager : MonoBehaviour
         readyToPerformAttack = true;
     }
 
+    public void EnableIsInvulnerable()
+    {
+        player.playerCurrentState.isInvulnerable = true;
+    }
 
+    public void DisableIsInvulnerable()
+    {
+        player.playerCurrentState.isInvulnerable = false;
+    }
 }

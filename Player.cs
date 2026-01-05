@@ -125,7 +125,7 @@ public class Player : CharacterManager
         currentCharacterData.yPosition = transform.position.y;
         currentCharacterData.zPosition = transform.position.z;
 
-        currentCharacterData.currentHealth = playerStatManager.currentHealth;
+        currentCharacterData.currentHealth = playerStatManager.CurrentHealth;
         currentCharacterData.currentStamina = playerStatManager.currentStamina;
 
         currentCharacterData.vitality = playerStatManager.vitality;

@@ -20,6 +20,7 @@ public class ResetPlayerState : StateMachineBehaviour
         player.canMove = true;
         player.applyRootMotion = false;
         player.isRolling = false;
+        player.isInvulnerable = false;
         //Player.instance.playerCombatManager.AttackCoolDown();
     }
 

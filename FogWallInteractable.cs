@@ -30,6 +30,24 @@ public class FogWallInteractable : MonoBehaviour
         OnActive += OnIsActiveChanaged;
     }
 
+    private void Start()
+    {
+        Onspawn();
+    }
+
+    public void Onspawn()
+    {
+        OnIsActiveChanaged(false,isActive);
+        OnActive += OnIsActiveChanaged;
+        WorldObjectManager.instance.AddFogWallTolist(this);
+    }
+
+    public void OnDespawn()
+    {
+        OnActive -= OnIsActiveChanaged;
+        WorldObjectManager.instance.RemoveFogWallTolist(this);
+    }
+
     private void OnIsActiveChanaged(bool oldBool, bool newBool)
     {
         if (isActive)

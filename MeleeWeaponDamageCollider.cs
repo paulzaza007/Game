@@ -26,21 +26,6 @@ public class MeleeWeaponDamageCollider : DamageCollider
         damageCollider.enabled = false;
     }
 
-    protected override void OnTriggerEnter(Collider other)
-    {
-        CharacterManager damageTarget = other.GetComponentInParent<CharacterManager>();
-
-        if(damageTarget == characterCausingDamage)
-            return;
-
-        if(damageTarget != null)
-        {
-            contactPoint = other.gameObject.GetComponent<Collider>().ClosestPointOnBounds(transform.position);
-
-            DamageTarget(damageTarget);
-        }
-    }
-
     protected override void DamageTarget(CharacterManager damageTarget)
     {
         if (characterDamaged.Contains(damageTarget))

@@ -1,11 +1,9 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "A.I/States/Undead Idle")]
+[CreateAssetMenu(menuName = "A.I/States/Undead/Undead Idle")]
 
 public class AIUndeadIdleState : IdleState
 {
-    [SerializeField] AIUndeadAttackAction attack02;
-
     public override AIState Tick(AICharacterManager aICharacter)
     {
         if (aICharacter.playerCombatManager.currentTarget != null) //เจอผู้เล่น ให้เข้าstateเข้าหาผู้เล่น

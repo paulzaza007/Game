@@ -2,18 +2,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-[CreateAssetMenu(menuName = "A.I/States/Undead/Undead Combat Stance")]
+[CreateAssetMenu(menuName = "A.I/States/Cyclop/Cyclop Combat Stance")]
 
-public class AIUndeadCombatStanceState : AICombatStanceState
+public class AICyclopCombatStanceState : AICombatStanceState
 {
-    public List<AIUndeadAttackAction> aIUndeadAttack; //****
-    protected List<AIUndeadAttackAction> potentialUndeadAttacks;
-    protected AIUndeadAttackAction chooseUndeadAttack; //****
-    protected AIUndeadAttackAction previosUndeadAttack; //****
+    public List<AICyclopAttackAction> aICyclopAttack; //****
+    protected List<AICyclopAttackAction> potentialCyclopAttacks; //****
+    protected AICyclopAttackAction chooseCyclopAttack; //****
+    protected AICyclopAttackAction previosCyclopAttack; //****
 
     public override AIState Tick(AICharacterManager aICharacter)
     {
-        Debug.Log("Combat stance ของ undead กำลังทำงาน");
+        //Debug.Log("Combat stance ของ Cyclop กำลังทำงาน");
         if (aICharacter.aICurrentState.isPerformingAction) //ถ้าAIเล่นอนิเมชั่นอยู่ให้รัน state นี้ใหม่
         {
             return this;
@@ -47,8 +47,8 @@ public class AIUndeadCombatStanceState : AICombatStanceState
         }
         else //มีท่าโจมตีแล้ว ส่งท่าโจมตีไปให้ stateAttack และเปลี่ยนstate
         {
-            aICharacter.attack.currentUndeadAttack = chooseUndeadAttack; //****
-            Debug.Log("สั่งโจมตี");
+            aICharacter.attack.currentCyclopAttack = chooseCyclopAttack; //****
+            //Debug.Log("สั่งโจมตี");
 
             return SwitchState(aICharacter, aICharacter.attack);
         }
@@ -68,10 +68,10 @@ public class AIUndeadCombatStanceState : AICombatStanceState
 
     protected override void GetNewAttack(AICharacterManager aICharacter)
     {
-        potentialUndeadAttacks = new List<AIUndeadAttackAction>();
-        Debug.Log($"กำลังหาท่าโจมตี... มีท่าในลิสต์ทั้งหมด {aIUndeadAttack.Count} ท่า");
+        potentialCyclopAttacks = new List<AICyclopAttackAction>();
+        //Debug.Log($"กำลังหาท่าโจมตี... มีท่าในลิสต์ทั้งหมด {aICyclopAttack.Count} ท่า");
 
-        foreach (var potentialAttack in aIUndeadAttack) // ลูปหาท่าใน Undead
+        foreach (var potentialAttack in aICyclopAttack) // ลูปหาท่าใน Undead
         {
             if (potentialAttack.minimumDistance > aICharacter.aICharacterCombatManager.distanceFromTarget) //ใกล้ไป
             {
@@ -90,19 +90,18 @@ public class AIUndeadCombatStanceState : AICombatStanceState
                 continue;
             }
 
-            potentialUndeadAttacks.Add(potentialAttack); //เพิ่มท่าที่สามารถโจมตีได้เข้าไปในlist
-            Debug.Log($"มีท่าโจมตีในลิสต์ตอนนี้ทั้งหมด {potentialUndeadAttacks.Count} ท่า");
+            potentialCyclopAttacks.Add(potentialAttack); //เพิ่มท่าที่สามารถโจมตีได้เข้าไปในlist
+           // Debug.Log($"มีท่าโจมตีในลิสต์ตอนนี้ทั้งหมด {potentialCyclopAttacks.Count} ท่า");
         }
-        
-        if (potentialUndeadAttacks.Count <= 0) //ไม่มีท่าเลยให้ คืนค่าออก
+
+        if (potentialCyclopAttacks.Count <= 0) //ไม่มีท่าเลยให้ คืนค่าออก
         {
-            Debug.Log("ไม่เจอท่าของ Undead");
             return;
         }
 
         var totalWeight = 0; //สร้างน้ำหนักรวมเพื่มมาเก็บค่าน้ำในแต่ละท่าโจมตี
 
-        foreach (var attack in potentialUndeadAttacks)//เก็บค่าน้ำหนักรวมจากทุกท่า
+        foreach (var attack in potentialCyclopAttacks)//เก็บค่าน้ำหนักรวมจากทุกท่า
         {
             totalWeight += attack.AttackWeight;
         }
@@ -110,22 +109,22 @@ public class AIUndeadCombatStanceState : AICombatStanceState
         var randomWeightValue = Random.Range(1, totalWeight + 1); //สุ่มค่าน้ำหนัก
         var processWeight = 0; //ค่าที่จะเอาค่าน้ำหนักแต่ละค่าไปหาท่าโจมตี
 
-        foreach (var attack in potentialUndeadAttacks)
+        foreach (var attack in potentialCyclopAttacks)
         {
             processWeight += attack.AttackWeight; //รับค่าน้ำหนักจากท่านี้มา
 
             if (randomWeightValue <= processWeight) //ท่าสุ่มน้ำหนัก น้อยกว่าเท่ากับ น้ำหนักที่เอาเอามาหา ก็จะเลือกท่านั้นเป็นท่าโตมตี
             {
-                chooseUndeadAttack = attack; //****
-                previosUndeadAttack = chooseUndeadAttack; //****
+                chooseCyclopAttack = attack; //****
+                previosCyclopAttack = chooseCyclopAttack; //****
                 hasAttack = true;
-                Debug.Log($"เลือกท่า {attack} ท่า");
+                //Debug.Log($"เลือกท่า {attack} ท่า");
                 return;
             }
         }
     }
-    
-    
+
+
     protected override void ResetStateFlags(AICharacterManager aICharacter)
     {
         base.ResetStateFlags(aICharacter);
@@ -134,4 +133,3 @@ public class AIUndeadCombatStanceState : AICombatStanceState
         hasRollForComboChance = false;
     }
 }
-    

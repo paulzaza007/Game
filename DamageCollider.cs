@@ -5,6 +5,10 @@ public class DamageCollider : MonoBehaviour
 {
     [Header("Collider")]
     [SerializeField] protected Collider damageCollider;
+    [SerializeField] protected Collider[] damageColliders;
+
+    int hitBoxLayer;
+    int damageColliderLayer;
 
     [Header("Damage")]
     public float physicalDamage = 0;
@@ -21,7 +25,8 @@ public class DamageCollider : MonoBehaviour
 
     protected virtual void Awake()
     {
-        
+        hitBoxLayer = LayerMask.NameToLayer("HitBox");
+        damageColliderLayer = LayerMask.NameToLayer("DamageCollider");
     }
  
     protected virtual void OnTriggerEnter(Collider other)
@@ -35,6 +40,16 @@ public class DamageCollider : MonoBehaviour
             Debug.Log("2. Target Found, HP: " + damageTarget.characterStatManager.currentHealth);
             contactPoint = other.gameObject.GetComponent<Collider>().ClosestPointOnBounds(transform.position);
 
+            if (damageTarget.characterCurrentState.isInvulnerable)
+            {
+                return;
+            }
+
+            if(other.gameObject.layer == hitBoxLayer || other.gameObject.layer == damageColliderLayer)
+            {
+                return;
+            }
+
             DamageTarget(damageTarget);
         }
     }
@@ -43,11 +58,10 @@ public class DamageCollider : MonoBehaviour
     {
         if (characterDamaged.Contains(damageTarget))
         {
-            Debug.Log("3. Skipping: Target already in list!");
             return;
         }
         characterDamaged.Add(damageTarget);
-        Debug.Log("ตี");
+        //Debug.Log("ตี");
 
         TakeDamageEffect damageEffect = Instantiate(WorldPlayerEffectManager.instance.takeDamageEffect);
         damageEffect.physicalDamage = physicalDamage;
@@ -57,18 +71,34 @@ public class DamageCollider : MonoBehaviour
         damageEffect.holyDamage = holyDamage;
         damageEffect.contactPoint = contactPoint;
 
-        //damageTarget.playerEffectManager.ProcessInstantEffect(damageEffect);//bug
+        damageTarget.playerEffectManager.ProcessInstantEffect(damageEffect);
     }
 
     public virtual void EnableDamageCollider()
     {
-        damageCollider.enabled = true;
+        if(damageCollider != null)
+        {
+            damageCollider.enabled = true;
+        }
+        foreach (var collider in damageColliders)
+        {
+            collider.enabled = true;
+        }
+
     }
 
     public virtual void DisableDamageCollider()
     {
-        damageCollider.enabled = false;
+        if (damageCollider != null)
+        {
+            damageCollider.enabled = false;
+        }
+        foreach (var collider in damageColliders)
+        {
+            collider.enabled = false;
+        }
         characterDamaged.Clear();
-        Debug.Log("เครียร์ target");
+
+
     }
 }

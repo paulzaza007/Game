@@ -46,6 +46,23 @@ public class AICharacterManager : CharacterManager
 
     public event System.Action<bool, bool> OnMoving;
 
+    public bool isActive = false;
+    public bool IsActive
+    {
+        get => isActive;
+        set
+        {
+            if (isActive == value) return;
+
+            bool old = isActive;
+            isActive = value;
+
+            OnActive?.Invoke(old, value);
+        }
+    }
+
+    public event System.Action<bool, bool> OnActive;
+
     protected override void Awake()
     {
         base.Awake();
@@ -139,7 +156,19 @@ public class AICharacterManager : CharacterManager
         if (animator != null)
         {
             animator.SetBool("isMoving", newBool);
-            animator.CrossFade("Undead_Walk", 0.2f);
+            if (newBool)
+            {
+                animator.CrossFade("Walking", 0.3f);
+            }
+            else if(!aICurrentState.IsTargeting)
+            {
+                animator.CrossFade("Idle", 0.3f);
+            }
+            else
+            {
+                animator.CrossFade("Idle_Targeting", 0.3f);
+            }
+
         }
     }
 

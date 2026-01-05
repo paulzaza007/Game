@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-[CreateAssetMenu(menuName = "A.I/States/Undead Pursues Target")]
+[CreateAssetMenu(menuName = "A.I/States/Undead/Undead Pursues Target")]
 
 public class UndeadPurSueTargetState : PurSueTargetState
 {
