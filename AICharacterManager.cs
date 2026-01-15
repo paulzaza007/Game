@@ -5,17 +5,20 @@ using UnityEngine.AI;
 
 public class AICharacterManager : CharacterManager
 {
+    [Header("Character Name")]
+    public string characterName = "";
    
     [HideInInspector] public AICharacterCombatManager aICharacterCombatManager;
     [HideInInspector] public AIMovementManager aIMovementManager;
     [HideInInspector] public AIAnimationManager aIAnimationManager;
     [HideInInspector] public AICurrentState aICurrentState;
+    [HideInInspector] public AIStatManager aIStatManager;
 
     [Header("Navmesh Agent")]
     public NavMeshAgent navMeshAgent;
 
     [Header("Current State")]
-    [SerializeField] AIState currentState;
+    public AIState currentState;
 
     [Header("States")]
     public IdleState idle;
@@ -23,6 +26,7 @@ public class AICharacterManager : CharacterManager
     public AICombatStanceState combatStance;
     public AIAttackState attack;
     public AIDeathState deathState;
+    public BossSleepState sleepState;
     
 
     [HideInInspector] public Animator animator;
@@ -70,6 +74,7 @@ public class AICharacterManager : CharacterManager
         aIMovementManager = GetComponent<AIMovementManager>();
         aICurrentState = GetComponent<AICurrentState>();
         aIAnimationManager = GetComponent<AIAnimationManager>();
+        aIStatManager = GetComponent<AIStatManager>();
 
         animator = GetComponent<Animator>();
         navMeshAgent = GetComponentInChildren<NavMeshAgent>();
@@ -82,8 +87,16 @@ public class AICharacterManager : CharacterManager
         navMeshAgent.updateRotation = true;
 
         // Clone Scriptable Objects เพื่อไม่ให้ข้อมูลทับกันระหว่าง AI แต่ละตัว
-        if (idle != null) idle = Instantiate(idle);
-        if (purSueTarget != null) purSueTarget = Instantiate(purSueTarget);
+        if (idle != null) 
+        {
+            idle = Instantiate(idle);
+        }
+        if (purSueTarget != null)
+        {
+            purSueTarget = Instantiate(purSueTarget);
+        }
+        combatStance = Instantiate(combatStance);
+        attack = Instantiate(attack);
 
         currentState = idle;
 
@@ -91,8 +104,10 @@ public class AICharacterManager : CharacterManager
         OnMoving += OnMovingBoolChange;
     }
 
-    private void Start()
+    protected override void Start()
     {
+        base.Start();
+        
         characterSFXManager.audioSource.loop = true;
         characterSFXManager.audioSource.clip = WorldSFXManager.instance.UndeadIdleSFX;
         characterSFXManager.audioSource.volume = 1f;
@@ -151,7 +166,7 @@ public class AICharacterManager : CharacterManager
         }
     }
 
-    private void OnMovingBoolChange(bool oldBool, bool newBool)
+    protected virtual void OnMovingBoolChange(bool oldBool, bool newBool)
     {
         if (animator != null)
         {
@@ -172,12 +187,33 @@ public class AICharacterManager : CharacterManager
         }
     }
 
-    private void OnDisable()
+    protected override void OnEnable()
     {
-        OnMoving -= OnMovingBoolChange;
+        if (characterUIManager.hasFloatingHPBar)
+        {
+            characterStatManager.OnCurrentHealth += characterUIManager.OnHPChanged;
+        }
     }
 
-    public IEnumerator ProcessingDeath()
+    protected override void OnDisable()
+    {
+        OnMoving -= OnMovingBoolChange;
+        if (characterUIManager.hasFloatingHPBar)
+        {
+            characterStatManager.OnCurrentHealth -= characterUIManager.OnHPChanged;
+        }
+    }
+
+    protected override void OnCurrentHealthChange(int oldFloat, int newFloat)
+    {
+        if (characterStatManager.CurrentHealth <= 0)
+        {
+            StartCoroutine(ProcessDeathEvent());
+            characterStatManager.OnCurrentHealth -= OnCurrentHealthChange;
+        }
+    }
+
+    public override IEnumerator ProcessDeathEvent(bool manuallySelectDeathAnimation = false)
     {
         deathState.SwitchToDeathState(this);
         aIAnimationManager.enabled = false;

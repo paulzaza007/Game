@@ -1,26 +1,21 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class CharacterManager : MonoBehaviour
 {
-    //public static CharacterManager instance;
-    [HideInInspector] public PlayerAnimatorManger playerAnimatorManager;
-    [HideInInspector] public PlayerMovement playerMovement;
-    [HideInInspector] public PlayerDodge playerDodge;
-    [HideInInspector] public PlayerInput playerInput;
-    [HideInInspector] public PlayerStatManager playerStatManager;
-    [HideInInspector] public PlayerCurrentState playerCurrentState;
-    [HideInInspector] public PlayerEffectsManager playerEffectManager;
-    [HideInInspector] public PlayerUIPopUpManager playerUIPopUpManager;
-    [HideInInspector] public PlayerInventoryManager playerInventoryManager;
-    [HideInInspector] public PlayerEquipmentManager playerEquipmentManager;
-    [HideInInspector] public PlayerCombatManager playerCombatManager;
+    [Header("UI")]
+    public UI_Character_HP_Bar characterHPBar;
 
     [HideInInspector] public AICharacterManager aICharacterManager;
-    [HideInInspector] public Player player;
+    [HideInInspector] public PlayerManager player;
 
     [HideInInspector] public CharacterCurrentState characterCurrentState;
     [HideInInspector] public CharacterStatManager characterStatManager;
     [HideInInspector] public CharacterSFXManager characterSFXManager;
+    [HideInInspector] public CharacterEffectManager characterEffectManager;
+    [HideInInspector] public CharacterCombatManager characterCombatManager;
+    [HideInInspector] public CharacterUIManager characterUIManager;
 
     [Header("Character Group")]
     public CharacterGroup characterGroup;
@@ -28,28 +23,76 @@ public class CharacterManager : MonoBehaviour
     protected virtual void Awake()
     {
         
-        playerAnimatorManager = GetComponent<PlayerAnimatorManger>();
-        playerMovement = GetComponent<PlayerMovement>();
-        playerDodge = GetComponent<PlayerDodge>();
-        playerInput = GetComponent<PlayerInput>();
-        playerStatManager = GetComponent<PlayerStatManager>();
-        playerCurrentState = GetComponent<PlayerCurrentState>();
-        playerEffectManager = GetComponent<PlayerEffectsManager>();
-        playerInventoryManager = GetComponent<PlayerInventoryManager>();
-        playerEquipmentManager = GetComponent<PlayerEquipmentManager>();
-        playerCombatManager = GetComponent<PlayerCombatManager>();
+        
 
         aICharacterManager = GetComponent<AICharacterManager>();
-        player = GetComponent<Player>();
+        player = GetComponent<PlayerManager>();
 
         characterCurrentState = GetComponent<CharacterCurrentState>();
         characterStatManager = GetComponent<CharacterStatManager>();
         characterSFXManager = GetComponent<CharacterSFXManager>();
+        characterEffectManager = GetComponent<CharacterEffectManager>();
+        characterCombatManager = GetComponent<CharacterCombatManager>();
+        characterUIManager = GetComponent<CharacterUIManager>();
+
+        characterStatManager.OnCurrentHealth += OnCurrentHealthChange;
 
     }
 
     protected virtual void FixedUpdate()
     {
         
+    }
+
+    protected virtual void Start()
+    {
+        IgnoreMyOwnColliders();
+    }
+
+    protected virtual void OnEnable()
+    {
+        
+    }
+
+    protected virtual void OnDisable()
+    {
+
+    }
+
+    protected virtual void OnCurrentHealthChange(int oldFloat, int newFloat)
+    {
+        if (characterStatManager.CurrentHealth <= 0)
+        {
+            StartCoroutine(ProcessDeathEvent());
+            characterStatManager.OnCurrentHealth -= OnCurrentHealthChange;
+        }
+    }
+
+    public virtual IEnumerator ProcessDeathEvent(bool manuallySelectDeathAnimation = false)
+    {
+        yield return null;
+    }
+
+    protected virtual void IgnoreMyOwnColliders()
+    {
+        Collider playerControllerCollider = GetComponent<Collider>();
+        Collider[] damageablePlayerColliders = GetComponentsInChildren<Collider>();
+
+        List<Collider> ignoreCollider = new List<Collider>();
+
+        foreach (var collider in damageablePlayerColliders)
+        {
+            ignoreCollider.Add(collider);
+        }
+
+        ignoreCollider.Add(playerControllerCollider);
+
+        foreach (var collider in ignoreCollider)
+        {
+            foreach (var otherCollider in ignoreCollider)
+            {
+                Physics.IgnoreCollision(collider, otherCollider, true);
+            }
+        }
     }
 }

@@ -6,7 +6,7 @@ public class AICyclopIdleState : IdleState
 {
     public override AIState Tick(AICharacterManager aICharacter)
     {
-        if (aICharacter.playerCombatManager.currentTarget != null) //เจอผู้เล่น ให้เข้าstateเข้าหาผู้เล่น
+        if (aICharacter.aICharacterCombatManager.currentTarget != null) //เจอผู้เล่น ให้เข้าstateเข้าหาผู้เล่น
         {
             
             aICharacter.aICurrentState.IsTargeting = true;

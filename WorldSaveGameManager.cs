@@ -1,12 +1,11 @@
 using System.Collections;
 using System.IO;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 public class WorldSaveGameManager : MonoBehaviour
 {
     public static WorldSaveGameManager instance;
-
-    [SerializeField] Player player;
 
     [Header("Save/Load")] //ไว้ Debug
     [SerializeField] bool saveGame;
@@ -188,10 +187,12 @@ public class WorldSaveGameManager : MonoBehaviour
 
         saveFileDataWriter.saveFileName = saveFileName;
 
-        player.SaveGameToCurrentCharacterData(ref currentPlayerData);
+        PlayerManager.instance.SaveGameToCurrentCharacterData(ref currentPlayerData);
 
         saveFileDataWriter.CreateNewCharacterSaveFile(currentPlayerData);
     }
+
+
 
     public void DeleteGame(CharacterSlot characterSlot)
     {
@@ -228,26 +229,14 @@ public class WorldSaveGameManager : MonoBehaviour
         // เริ่มโหลดฉาก
         AsyncOperation loadOperation = SceneManager.LoadSceneAsync(worldSceneIndex);
 
-        // -------------------------------------------------------------
-        // เพิ่มส่วนนี้: รอจนกว่าฉากจะโหลดเสร็จ 100%
-        // -------------------------------------------------------------
         while (!loadOperation.isDone)
         {
-            yield return null; // รอ frame ถัดไป
-        }
-        // -------------------------------------------------------------
-
-        // เมื่อโหลดเสร็จแล้ว ค่อยเรียกใช้ Player
-        // ใส่ if เช็คกันเหนียวด้วยว่ามี Player จริงไหม
-        if (Player.instance != null)
-        {
-            Player.instance.LoadGameToCurrentCharacterData(ref currentPlayerData);
-        }
-        else
-        {
-            Debug.LogError("Error: หา Player.instance ไม่เจอใน Scene ใหม่!");
+            yield return null;
         }
         
-        // yield return null; // อันเก่าลบทิ้ง หรือเก็บไว้ก็ได้ ไม่มีผล
+        if (PlayerManager.instance != null)
+        {
+            PlayerManager.instance.LoadGameToCurrentCharacterData(ref currentPlayerData);
+        }
     }
 }

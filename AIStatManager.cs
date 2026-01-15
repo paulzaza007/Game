@@ -10,12 +10,5 @@ public class AIStatManager : CharacterStatManager
         aICharacter = GetComponent<AICharacterManager>();
     }
 
-    protected override void OnCurrentHealthChange(float oldFloat, float newFloat)
-    {
-        if(newFloat <= 0)
-        {
-            CurrentHealth = 0;
-            StartCoroutine(aICharacter.ProcessingDeath());
-        }
-    }
+    
 }

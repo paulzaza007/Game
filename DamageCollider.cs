@@ -37,7 +37,6 @@ public class DamageCollider : MonoBehaviour
 
         if(damageTarget != null)
         {
-            Debug.Log("2. Target Found, HP: " + damageTarget.characterStatManager.currentHealth);
             contactPoint = other.gameObject.GetComponent<Collider>().ClosestPointOnBounds(transform.position);
 
             if (damageTarget.characterCurrentState.isInvulnerable)
@@ -71,7 +70,7 @@ public class DamageCollider : MonoBehaviour
         damageEffect.holyDamage = holyDamage;
         damageEffect.contactPoint = contactPoint;
 
-        damageTarget.playerEffectManager.ProcessInstantEffect(damageEffect);
+        damageTarget.characterEffectManager.ProcessInstantEffect(damageEffect);
     }
 
     public virtual void EnableDamageCollider()

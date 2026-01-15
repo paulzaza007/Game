@@ -74,14 +74,12 @@ public class TakeDamageEffect : InstantPlayerEffect
             finalDamageDealt = 1;
         }
 
-        character.characterStatManager.CurrentHealth -= finalDamageDealt;
-
-
+        character.characterStatManager.CurrentHealth -= (int)finalDamageDealt;
     }
 
     private void PlayDamageVFX(CharacterManager character)
     {
-        character.playerEffectManager.PlayBloodSplatterVFX(contactPoint);
+        character.characterEffectManager.PlayBloodSplatterVFX(contactPoint);
     }
 
     private void PlayDamageSFX(CharacterManager character)

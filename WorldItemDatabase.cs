@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class WorldItemDatabase : MonoBehaviour
+public class WorldItemDatabase : MonoBehaviour //เก็บข้อมูลไอเท็มทั้งหมด
 {
     public static WorldItemDatabase instance;
     
@@ -27,17 +27,17 @@ public class WorldItemDatabase : MonoBehaviour
 
         foreach(var weapon in weapons)
         {
-            items.Add(weapon);
+            items.Add(weapon); //แอดอาวุธใส่ใน List item
         }
 
         for(int i = 0; i < items.Count; i++)
         {
-            items[i].itemID = i;
+            items[i].itemID = i; //สร้าง ID ให้ item แต่ละชิ้น
         }
     }
 
     public WeaponItem GetWeaponByID(int ID)
     {
-        return weapons.FirstOrDefault(weapon => weapon.itemID == ID);
+        return weapons.FirstOrDefault(weapon => weapon.itemID == ID); //ใช้ LINQ หา ID จากListอาวุธ
     }
 }

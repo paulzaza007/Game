@@ -3,18 +3,27 @@ using System.Collections;
 
 public class PlayerDodge : MonoBehaviour
 {
+    private PlayerManager player;
+
     [Header("PLAYER ACTIONS INPUT")]
     [HideInInspector] public bool dodgeInput = false;
     
     private Vector3 rollDirection;
 
     private float verticalVelocity; 
-    [SerializeField] private float gravity = -9.81f; // แรงโน้มถ่วง (ปรับได้)
+
+    [Header("Dodge Settings")]
+    [SerializeField] private float gravity = -9.8f;
     [SerializeField] private float dodgeStaminaCost = 4f;
+    [SerializeField] private float dodgeDistant = 1;
+    [SerializeField] private int backStepStartTime = 1;
+
+    [Header("Debug")]
+    [SerializeField] float dotValue;
 
     private void Awake()
     {
-        
+        player = GetComponent<PlayerManager>();
     }
 
     private void OnEnable()
@@ -25,6 +34,11 @@ public class PlayerDodge : MonoBehaviour
     private void OnDisable()
     {
         
+    }
+
+    private void Update()
+    {
+        HandleDodge();
     }
 
     public void HandleDodge()
@@ -38,50 +52,67 @@ public class PlayerDodge : MonoBehaviour
 
     public void AttemptToPerformDodge()
     {
-        if (Player.instance.playerCurrentState.isPerformingAction)
+        if (PlayerManager.instance.playerCurrentState.isPerformingAction)
             return;
 
-        if (Player.instance.playerStatManager.currentStamina < dodgeStaminaCost)
+        if (PlayerManager.instance.playerStatManager.currentStamina < dodgeStaminaCost)
             return;
 
-        if (Player.instance.playerInput.moveAmount > 0 && Player.instance.characterController.isGrounded)
+        CheckDirectionBetweenCamera();
+        if (dotValue > 0 && player.playerMovement.verticalMovement <= -0.8 && PlayerManager.instance.characterController.isGrounded)
         {
-            Player.instance.playerCurrentState.isPerformingAction = true;
-            Player.instance.playerCurrentState.isRolling = true;
-            rollDirection = CameraPlayer.instance.cameraObject.transform.forward * Player.instance.playerInput.verticalInput;
-            rollDirection += CameraPlayer.instance.cameraObject.transform.right * Player.instance.playerInput.horizontalInput;
+            PlayerManager.instance.playerAnimatorManager.PlayerTargetActionAnimation("BackStep", true, true);
+            PlayerManager.instance.playerStatManager.CurrentStamina -= dodgeStaminaCost;
+            PlayerManager.instance.playerStatManager.ResetStaminaRegenTimer();
+        }
+
+        else if (PlayerManager.instance.playerInput.moveAmount > 0 && PlayerManager.instance.characterController.isGrounded)
+        {
+            Debug.Log(dotValue +",,"  +player.playerMovement.verticalMovement);
+            PlayerManager.instance.playerCurrentState.isPerformingAction = true;
+            PlayerManager.instance.playerCurrentState.isRolling = true;
+            rollDirection = CameraPlayer.instance.cameraObject.transform.forward * PlayerManager.instance.playerInput.verticalInput;
+            rollDirection += CameraPlayer.instance.cameraObject.transform.right * PlayerManager.instance.playerInput.horizontalInput;
             rollDirection.y = 0;
             rollDirection.Normalize();
 
             transform.rotation = Quaternion.LookRotation(rollDirection);
 
             // ✅ ใช้ Root Motion ตอนกลิ้งไปข้างหน้า
-            Player.instance.playerAnimatorManager.PlayerTargetActionAnimation("Rolling", true, true);
-            Player.instance.playerStatManager.currentStamina -= dodgeStaminaCost;
-            Player.instance.playerStatManager.ResetStaminaRegenTimer();
+            PlayerManager.instance.playerAnimatorManager.PlayerTargetActionAnimation("Rolling", true, true);
+            PlayerManager.instance.playerStatManager.CurrentStamina -= dodgeStaminaCost;
+            PlayerManager.instance.playerStatManager.ResetStaminaRegenTimer();
 
 
         }
-        else
-        {
-            // ✅ ใช้ Root Motion ตอนกลิ้งถอยหลังด้วย
-            //PlayerTargetActionAnimation("Roll_Backward_01", true, true);
-        }
+    }
+
+    private void CheckDirectionBetweenCamera()
+    {
+        Vector3 camera = CameraPlayer.instance.transform.forward;
+        Vector3 player = PlayerManager.instance.transform.forward;
+ 
+        dotValue = Vector3.Dot(player, camera);
+        
+        
     }
 
 
     private void OnAnimatorMove()
     {
-        if (!Player.instance.playerCurrentState.applyRootMotion) return;
+        if (!PlayerManager.instance.playerCurrentState.applyRootMotion)
+        {
+            return;
+        } 
 
         // 1. รับค่าการเคลื่อนที่จาก Animation (ซ้าย-ขวา-หน้า-หลัง)
-        Vector3 velocity = Player.instance.animator.deltaPosition;
+        Vector3 velocity = PlayerManager.instance.animator.deltaPosition;
 
         // 2. คำนวณแรงโน้มถ่วง (บน-ล่าง)
-        if (Player.instance.characterController.isGrounded)
+        if (PlayerManager.instance.characterController.isGrounded)
         {
             // ถ้าอยู่บนพื้น ให้กดไว้เบาๆ เพื่อให้ IsGrounded ทำงานแม่นยำ
-            verticalVelocity = -2f; 
+            verticalVelocity = -0.2f; 
         }
         else
         {
@@ -94,10 +125,10 @@ public class PlayerDodge : MonoBehaviour
         velocity.y = verticalVelocity * Time.deltaTime;
 
         // 4. สั่งเคลื่อนที่รวมกันทีเดียว
-        Player.instance.characterController.Move(velocity);
+        PlayerManager.instance.characterController.Move(velocity * dodgeDistant);
 
-        // 5. ส่วน Rotation (แก้ไปแล้วจากข้อก่อนหน้า)
-        Quaternion deltaRot = Player.instance.animator.deltaRotation;
+        // 5. ส่วน Rotation
+        Quaternion deltaRot = PlayerManager.instance.animator.deltaRotation;
         Vector3 eulerRot = deltaRot.eulerAngles;
         Quaternion yRotation = Quaternion.Euler(0, eulerRot.y, 0);
         transform.rotation *= yRotation;

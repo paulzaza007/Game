@@ -3,17 +3,11 @@ using UnityEngine;
 
 public class ResetPlayerState : StateMachineBehaviour
 {
-    CharacterManager character;
     
     // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        if(character == null)
-        {
-            character = animator.GetComponent<CharacterManager>();
-        }
-
-        var player = Player.instance.playerCurrentState;
+        var player = PlayerManager.instance.playerCurrentState;
 
         player.isPerformingAction = false;
         player.canRotate = true;
@@ -21,6 +15,8 @@ public class ResetPlayerState : StateMachineBehaviour
         player.applyRootMotion = false;
         player.isRolling = false;
         player.isInvulnerable = false;
+
+        PlayerManager.instance.playerCombatManager.DisableCanDoRollingAttack();
         //Player.instance.playerCombatManager.AttackCoolDown();
     }
 

@@ -4,10 +4,10 @@ using Unity.VisualScripting;
 
 public class PlayerMovement : MonoBehaviour
 {
-    private Player player;
+    private PlayerManager player;
     [SerializeField ] CameraPlayer playerCamera;
 
-    [SerializeField] float verticalMovement;
+    public float verticalMovement;
     [SerializeField] float horizontalMovement;
 
     private Vector3 moveDirection;
@@ -22,7 +22,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float rotationSpeedWhenLockOn = 30f;
 
     [Header("Stat Setting")]
-    [SerializeField] float sprintingStaminaCost = 20f;
+    [SerializeField] float sprintingStaminaCost = 20;
     [SerializeField] public float jumpStaminaCost = 2f;
     
     [SerializeField] float speed;
@@ -48,7 +48,7 @@ public class PlayerMovement : MonoBehaviour
     private void Awake()
     {
         speed = walkingSpeed; 
-        player = GetComponent<Player>();
+        player = GetComponent<PlayerManager>();
     }
 
     private void OnEnable()
@@ -59,6 +59,11 @@ public class PlayerMovement : MonoBehaviour
     private void OnDisable()
     {
         
+    }
+
+    private void Update()
+    {
+        HandleMovement();
     }
 
     public void HandleMovement()
@@ -95,7 +100,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 player.playerCurrentState.IsSprinting = true;
                 speed = sprintSpeed;
-                player.playerStatManager.currentStamina -= sprintingStaminaCost * Time.deltaTime;
+                player.playerStatManager.CurrentStamina -= sprintingStaminaCost * Time.deltaTime;
                 player.playerStatManager.ResetStaminaRegenTimer();
                 runningTime += Time.deltaTime;
             }            
@@ -254,7 +259,7 @@ public class PlayerMovement : MonoBehaviour
                 verticalVelocity = Mathf.Sqrt(2 * jumpHeight * gravity);
                 lastJumpTime = Time.time;
                 
-                player.playerStatManager.currentStamina -= jumpStaminaCost;
+                player.playerStatManager.CurrentStamina -= jumpStaminaCost;
                 player.playerStatManager.ResetStaminaRegenTimer();
                 
             }

@@ -5,9 +5,10 @@ public class WeaponItemAction : ScriptableObject
 {
     public int actionID;
 
-    public virtual void AttemptToPerformAction(Player playerPerformingAction, WeaponItem weaponPerformingAction)
+    //สั่งจาก characterCombat ที่รับ input มาอีกที
+    public virtual void AttemptToPerformAction(PlayerManager playerPerformingAction, WeaponItem weaponPerformingAction)
     {
-        playerPerformingAction.currentWeaponBeingUsed = weaponPerformingAction.itemID;
+        playerPerformingAction.CurrentRightHandWeaponID = weaponPerformingAction.itemID; // เปลี่ยน ID อาวุธให้ player 
 
         //Debug.Log("Action!");
     }

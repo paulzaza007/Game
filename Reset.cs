@@ -2,14 +2,14 @@ using UnityEngine;
 
 public class Reset : MonoBehaviour
 {
-    private Player player;
+    private PlayerManager player;
     [SerializeField] bool reset = false;
     [SerializeField] bool switchRightWeapon = false;
     [SerializeField] bool   switchLeftWeapon = false;
 
     private void Awake()
     {
-        player = GetComponent<Player>();
+        player = GetComponent<PlayerManager>();
     }
 
     private void Update()
@@ -17,7 +17,7 @@ public class Reset : MonoBehaviour
         DebugMenu(player);
     }
 
-    private void DebugMenu(Player player)
+    private void DebugMenu(PlayerManager player)
     {
         if (reset)
         {

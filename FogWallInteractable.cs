@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class FogWallInteractable : MonoBehaviour
+public class FogWallInteractable : Interactable
 {
     [Header("Fog")]
     [SerializeField] GameObject[] fogGameObjects;
@@ -25,12 +25,12 @@ public class FogWallInteractable : MonoBehaviour
 
     public event System.Action<bool, bool> OnActive;
 
-    private void Awake()
+    protected override void Awake()
     {
         OnActive += OnIsActiveChanaged;
     }
 
-    private void Start()
+    protected override void Start()
     {
         Onspawn();
     }

@@ -39,6 +39,10 @@ public class AICyclopPursueState : PurSueTargetState
         //aICharacter.navMeshAgent.SetDestination(aICharacter.aICharacterCombatManager.currentTarget.transform.position);
 
         // คำนวนเส้นทางAI ไป ผู้เล่น
+        if (aICharacter.navMeshAgent != null && !aICharacter.navMeshAgent.enabled)
+        {
+            aICharacter.navMeshAgent.enabled = true;
+        }
         NavMeshPath path = new NavMeshPath();
         aICharacter.navMeshAgent.CalculatePath(aICharacter.aICharacterCombatManager.currentTarget.transform.position, path);
         aICharacter.navMeshAgent.SetPath(path);

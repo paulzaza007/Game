@@ -83,58 +83,74 @@ public class CameraPlayer : MonoBehaviour
         if (player == null)
             return;
 
+        //รับค่าเมาส์ แกนx แกนy
         cameraInput = inputActions.PlayerCamera.CameraControls.ReadValue<Vector2>();
-        FollowTarget();
-        Rotation();
-        Collision();
+        FollowTarget(); //ให้กล้องตามผู้เล่น
+        Rotation(); //ให้กล้องรองรับการหัน
+        Collision(); //กันไม่ให้กล้องทะลุกำแพง
     }
 
     private void FollowTarget()
     {
+        //ตำแหน่งที่ต้องตาม แบบsmooth
         Vector3 targetPos = Vector3.SmoothDamp(transform.position, player.position, ref cameraVelocity, cameraSmoothSpeed);
+        //แล้วให้กล้องไปที่ตำแหน่งนั้น
         transform.position = targetPos;
     }
 
     private void Rotation()
     {
-        // 1. ถ้ามีเป้าหมายที่ล็อคอยู่ ให้กล้องหันหาเป้าหมาย
+        // ถ้าล็อคเป้าหมาย
         if (nearestLockOnTarget != null) 
         {
-            // หาตำแหน่งของศัตรู (พยายามหาจุด LockOnTargetTransform ถ้าไม่มีใช้ position ปกติ)
-            // หมายเหตุ: ตรงนี้กูใช้ GetComponentInChildren เผื่อไว้ก่อน เพราะกูไม่รู้ว่ามึงเก็บ CombatManager ไว้ตรงไหน
+            // รับตัวแปรจากเป้าหมายใกล้สุด
             Transform targetTransform = nearestLockOnTarget.transform;
             var aiCombatManager = nearestLockOnTarget.GetComponentInChildren<AICharacterCombatManager>();
             
+            //เป้าหมายต้องมีสคริปaiCombat และมีจุดที่ล็อคได้
             if(aiCombatManager != null && aiCombatManager.LockOnTargetTransform != null)
             {
                 targetTransform = aiCombatManager.LockOnTargetTransform;
             }
 
+            //คำนวนทิศทาง
             Vector3 targetDir = targetTransform.position - transform.position;
+            //ทำให้magnitudeเหลือ1
             targetDir.Normalize();
-            targetDir.y = 0; // ล็อคแกน Y ไม่ให้กล้องเงย/ก้ม มั่วซั่ว
+            //ตัดแกน y ทิ้ง
+            targetDir.y = 0;
 
-            if (targetDir == Vector3.zero) targetDir = transform.forward; // กันบั๊ก
-
+            if (targetDir == Vector3.zero)
+            {
+                targetDir = transform.forward; // กันบั๊ก
+            }
+ 
+            //คำนวนทิศทางที่ต้องหัน
             Quaternion targetRotation = Quaternion.LookRotation(targetDir);
+            //ให้กล้องหันตาม targetRotation แบบsmooth
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, cameraSmoothSpeed);
             
-            // อัปเดตค่ามุมมองให้ตรงกัน เพื่อให้พอกดปลดล็อคแล้วกล้องไม่ดีด
+            //อัปเดตค่ามุมมองให้ตรงกัน เพื่อให้พอกดปลดล็อคแล้วกล้องไม่ดีด
             Vector3 rotationEulers = transform.rotation.eulerAngles;
             leftAndRightLookAngle = rotationEulers.y;
             
-            return; // จบฟังก์ชันเลย ไม่ต้องคำนวณเมาส์ต่อ
+            return; //จบฟังก์ชันเลย ไม่ต้องคำนวณเมาส์ต่อ
         }
 
-        // 2. ถ้าไม่มีเป้าหมาย ให้หมุนตามเมาส์ปกติ
+        // ถ้าไม่มีเป้าหมาย ให้หมุนตามเมาส์ปกติ
+        // แยกค่าที่รับมาจากเมาส์ออกเป็นสองแกน
         float mouseX = cameraInput.x * sensitivityX;
         float mouseY = cameraInput.y * sensitivityY;
 
-        leftAndRightLookAngle += mouseX;
-        upAndDownLookAngle -= mouseY;
+        leftAndRightLookAngle += mouseX; //หันซ้ายขวา
+        upAndDownLookAngle -= mouseY; //หันขึ้นลง
+        // ล็อคไม่ให้ลงเกินขึ้นเกิน
         upAndDownLookAngle = Mathf.Clamp(upAndDownLookAngle, minimumPivot, maximumPivot);
 
+        // สั่งหันซ้ายขวา
         transform.rotation = Quaternion.Euler(0f, leftAndRightLookAngle, 0f);
+        // สั่งหันขึ้นลง
+        //cameraPivotTransform เป็นchildของการหันซ้ายขวา แลยค้องใช้ localRotation
         cameraPivotTransform.localRotation = Quaternion.Euler(upAndDownLookAngle, 0f, 0f);
     }
 
@@ -166,35 +182,32 @@ public class CameraPlayer : MonoBehaviour
     {
         float shortestDistance = Mathf.Infinity;
         
-        // เคลียร์ค่าเก่าทิ้ง
         avalibleTargets.Clear(); 
         nearestLockOnTarget = null;
 
-        // **จุดสำคัญ**: ตรวจสอบ Layer ให้ดีว่ารวม Enemy แล้วหรือยัง
         Collider[] colliders = Physics.OverlapSphere(player.position, lockOnRadius, WorldUtilityManager.instance.GetPlayerLayer());
 
         for (int i = 0; i < colliders.Length; i++)
         {
-            // เปลี่ยนมาหา AICharacterManager แทน Player
             AICharacterManager character = colliders[i].GetComponent<AICharacterManager>();
 
             if(character != null && !character.aICurrentState.isDead)
             {
-                // ตรวจสอบมุมมอง
+                // 
                 Vector3 lockOntargetsDirection = character.transform.position - player.position;
                 float distanceFromTarget = Vector3.Distance(player.position, character.transform.position);
                 
-                // ใช้ Forward ของกล้อง เพื่อดูว่าศัตรูอยู่หน้ากล้องไหม
+                // 
                 float viewableAngle = Vector3.Angle(lockOntargetsDirection, cameraObject.transform.forward);
 
-                // ตรวจสอบว่าศัตรูตายหรือยัง (ถ้ามีตัวแปร isDead ให้เปิดบรรทัดนี้)
-                // if (character.isDead) continue;
+                // 
+                // 
 
                 if(viewableAngle > minimumViewAngle && viewableAngle < maximumViewAngle)
                 {
                     RaycastHit hit;
                     
-                    // ตรวจสอบสิ่งกีดขวาง
+                    // 
                     Transform targetLockOnTransform = character.transform;
                     var aiCombat = character.GetComponentInChildren<AICharacterCombatManager>();
                     if(aiCombat != null && aiCombat.LockOnTargetTransform != null)
@@ -247,7 +260,7 @@ public class CameraPlayer : MonoBehaviour
 
     public IEnumerator WaitThenFindNewTarget()
     {
-        while (Player.instance.playerCurrentState.isPerformingAction)
+        while (PlayerManager.instance.playerCurrentState.isPerformingAction)
         {
             yield return null;
         }
@@ -257,8 +270,8 @@ public class CameraPlayer : MonoBehaviour
 
         if(nearestLockOnTarget != null)
         {
-            Player.instance.playerCombatManager.SetLockOnTarget(nearestLockOnTarget);
-            Player.instance.playerCurrentState.isLockTarget = true;
+            PlayerManager.instance.playerCombatManager.SetLockOnTarget(nearestLockOnTarget);
+            PlayerManager.instance.playerCurrentState.isLockTarget = true;
         }
 
         yield return null;
@@ -280,7 +293,7 @@ public class CameraPlayer : MonoBehaviour
         {
             timer += Time.deltaTime;
 
-            if (Player.instance.playerCombatManager.lockedOnEnemy != null)
+            if (PlayerManager.instance.playerCombatManager.lockedOnEnemy != null)
             {
                 cameraPivotTransform.transform.localPosition = Vector3.SmoothDamp(cameraPivotTransform.transform.localPosition, newLockCameraHeight, ref velocity, setCameraHeightSpeed);
                 cameraPivotTransform.transform.localRotation = Quaternion.Slerp(cameraPivotTransform.transform.localRotation, targetLockRotation, lockOnTargetFollowSpeed * Time.deltaTime);
@@ -295,7 +308,7 @@ public class CameraPlayer : MonoBehaviour
         }
 
 
-        if (Player.instance.playerCombatManager.lockedOnEnemy != null)
+        if (PlayerManager.instance.playerCombatManager.lockedOnEnemy != null)
         {
             cameraPivotTransform.transform.localPosition = newLockCameraHeight;
             cameraPivotTransform.transform.localRotation = targetLockRotation;

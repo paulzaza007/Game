@@ -1,13 +1,12 @@
 using UnityEngine;
 
-public class AICyclopManager : AICharacterManager
+public class AICyclopManager : MonoBehaviour
 {
-    public AICyclopSFXManager cyclopSFXManager;
+    /*public AICyclopSFXManager cyclopSFXManager;
 
-    protected override void Awake()
+    private void Awake()
     {
-        base.Awake();
 
         cyclopSFXManager = GetComponent<AICyclopSFXManager>();
-    }
+    }*/
 }

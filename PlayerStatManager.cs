@@ -3,61 +3,97 @@ using UnityEngine;
 public class PlayerStatManager : CharacterStatManager
 {
     [Header("Stamin Stats")]
-    public float endurance = 1f;
-    public float currentStamina = 100f;
-    public float baseStamina = 100f;
+    public int endurance = 1;
+    public float currentStamina = 100;
+    public int baseStamina = 100;
 
     [Header("Stamina Regeneration")]
     private float staminaRegenerationTimer = 0;
     private float staminaTickTimer = 0;
     [SerializeField] float staminaRegenerationDelay = 2;
-    [SerializeField] float staminaRegenerateAmount = 0.5f;
+    [SerializeField] int staminaRegenerateAmount = 1;
 
-
-    private void Start()
+    public float CurrentStamina
     {
-        RefreshStats();
+        get => currentStamina;
+        set
+        {
+            if (currentStamina == value) return;
+
+            float old = currentStamina;
+            currentStamina = value;
+
+            OnCurrentStamina?.Invoke(old, value);
+        }
+    }
+
+    public event System.Action<float, float> OnCurrentStamina;
+
+    protected override void Awake()
+    {
+        OnCurrentHealth += OnCurrentHealthChange;
+        OnCurrentStamina += OnCurrentStaminaChange;
+    }
+
+    protected override void Start()
+    {
+        float maxHealth = baseHealth * vitality;
+        PlayerUIManager.instance.playerUIHUDManager.SetMaxHealthValue((int)maxHealth);
+
+        int maxStamina = baseStamina * endurance;
+        PlayerUIManager.instance.playerUIHUDManager.SetMaxStaminaValue(maxStamina);
+
+
     }
 
     private void Update()
     {
-        passCurrentStaminaValue();
-        passCurrentHealthValue();
-        //RefreshStats();
-        CheckHP();
+        RegenerateStamina();
     }
 
-    public void RefreshStats()
+    protected override void OnCurrentHealthChange(int oldValue, int newValue)
     {
-        calculateStaminaBasedOnEnduranceLevel();
-        calculateHealthBasedOnVitalityLevel();
-    }
-    
-    public void calculateStaminaBasedOnEnduranceLevel()
-    {
-        float maxStamina = baseStamina * endurance;
+        PlayerUIManager.instance.playerUIHUDManager.SetNewHealthValue(0, currentHealth);
 
+        float maxHealth = baseHealth * vitality;
+        PlayerUIManager.instance.playerUIHUDManager.SetMaxHealthValue((int)maxHealth);
+
+        if (currentHealth <= 0)
+        {
+            if (PlayerManager.instance.playerCurrentState.isDead)
+            {
+                return;
+            }
+            StartCoroutine(PlayerManager.instance.ProcessDeathEvent());
+        }
+
+        if (currentHealth > baseHealth * vitality)
+        {
+            CurrentHealth = baseHealth * vitality;
+        }
+    }
+
+    private void OnCurrentStaminaChange(float oldValue, float newValue)
+    {
+        PlayerUIManager.instance.playerUIHUDManager.SetNewStaminaValue(0, (int)currentStamina);
+
+        int maxStamina = baseStamina * endurance;
         PlayerUIManager.instance.playerUIHUDManager.SetMaxStaminaValue(maxStamina);
-    }
 
-    public void passCurrentStaminaValue()
-    {
-        PlayerUIManager.instance.playerUIHUDManager.SetNewStaminaValue(0,currentStamina);
-    }
-
-    public void passCurrentHealthValue()
-    {
-        PlayerUIManager.instance.playerUIHUDManager.SetNewHealthValue(0,currentHealth);
+        if (currentStamina > baseStamina * endurance)
+        {
+            currentStamina = baseStamina * endurance;
+        }
     }
 
     public void RegenerateStamina()
     {
-        if (Player.instance.playerMovement.isRunning)
+        if (PlayerManager.instance.playerMovement.isRunning)
         {
             return;
         }
 
-        if (Player.instance.playerCurrentState.isPerformingAction)
+        if (PlayerManager.instance.playerCurrentState.isPerformingAction)
         {
             return;
         }
@@ -73,7 +109,7 @@ public class PlayerStatManager : CharacterStatManager
                 if (staminaTickTimer >= 0.1)
                 {
                     staminaTickTimer = 0;
-                    currentStamina += staminaRegenerateAmount;
+                    CurrentStamina += staminaRegenerateAmount;
 
                 }
             }
@@ -85,35 +121,4 @@ public class PlayerStatManager : CharacterStatManager
         staminaRegenerationTimer = 0;        
     }
 
-    public void CheckStamina()
-    {
-        if (currentStamina > baseStamina * endurance)
-        {
-            currentStamina = baseStamina * endurance;
-        }
-    }
-
-    public void calculateHealthBasedOnVitalityLevel()
-    {
-        float maxHealth = baseHealth * vitality;
-
-        PlayerUIManager.instance.playerUIHUDManager.SetMaxHealthValue(maxHealth);
-    }
-
-    public void CheckHP()
-    {
-        if (currentHealth <= 0)
-        {
-            if (Player.instance.playerCurrentState.isDead)
-            {
-                return;
-            }
-            StartCoroutine(Player.instance.ProcessDeathEvent());
-        }
-
-        if (currentHealth > baseHealth * vitality)
-        {
-            CurrentHealth = baseHealth * vitality;
-        }
-    }
 }

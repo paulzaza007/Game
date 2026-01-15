@@ -17,12 +17,12 @@ public class PlayerSaveData
     public float zPosition;
 
     [Header("Resorces")]
-    public float currentHealth;
-    public float currentStamina;
+    public int currentHealth;
+    public int currentStamina;
     
     [Header("Stats")]
-    public float vitality;
-    public float endurance;
+    public int vitality;
+    public int endurance;
 
     [Header("Bosses")]
     public SerializableDictionnary<int, bool> bossesAwake;

@@ -11,6 +11,8 @@ public class MeleeWeaponDamageCollider : DamageCollider
     public float light_Attack_03_Modifier;
     public float heavy_Attack_01_Modifier;
     public float charge_Attack_01_Modifier;  
+    public float running_Attack_01_Modifier;
+    public float rolling_Attack_01_Modifier;
 
     protected override void Awake()
     {
@@ -28,6 +30,10 @@ public class MeleeWeaponDamageCollider : DamageCollider
 
     protected override void DamageTarget(CharacterManager damageTarget)
     {
+        if(damageTarget == characterCausingDamage)
+        {
+            return;
+        }
         if (characterDamaged.Contains(damageTarget))
         {
             return;
@@ -43,7 +49,7 @@ public class MeleeWeaponDamageCollider : DamageCollider
         damageEffect.contactPoint = contactPoint;
         damageEffect.angleHitFrom = Vector3.SignedAngle(characterCausingDamage.transform.forward, damageTarget.transform.forward, Vector3.up);
 
-        switch (characterCausingDamage.playerCombatManager.currentAttackType)
+        switch (characterCausingDamage.characterCombatManager.currentAttackType)
         {
             case AttackType.LightAttack01:
                 ApplyAttackDamageModifier(light_Attack_01_Modifier, damageEffect);
@@ -60,12 +66,18 @@ public class MeleeWeaponDamageCollider : DamageCollider
             case AttackType.ChargeAttack01:
                 ApplyAttackDamageModifier(charge_Attack_01_Modifier, damageEffect);
                 break;
+            case AttackType.RunningAttack:
+                ApplyAttackDamageModifier(running_Attack_01_Modifier, damageEffect);
+                break;
+            case AttackType.RollingAttack:
+                ApplyAttackDamageModifier(rolling_Attack_01_Modifier, damageEffect);
+                break;
 
             default:
                 break;
         }
 
-        damageTarget.playerEffectManager.ProcessInstantEffect(damageEffect);
+        damageTarget.characterEffectManager.ProcessInstantEffect(damageEffect);
     }
 
     private void ApplyAttackDamageModifier(float modifier, TakeDamageEffect damage)

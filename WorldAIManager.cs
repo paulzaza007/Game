@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class WorldAIManager : MonoBehaviour
 {
@@ -13,7 +14,11 @@ public class WorldAIManager : MonoBehaviour
 
     [Header("Characters")] 
     [SerializeField] GameObject[] aiCharacters;
-    [SerializeField] List<GameObject> spawnedInCharacters;
+    [SerializeField] List<AICharacterManager> aICharacterSpawner;
+    [SerializeField] List<AICharacterManager> spawnedInCharacters;
+
+    [Header("Bosses")]
+    [SerializeField] List<AIBossManager> spawnedInBoss;
 
     private void Awake()
     {
@@ -57,12 +62,50 @@ public class WorldAIManager : MonoBehaviour
         SpawnAllCharacters();
     }
 
+    public void AddCharacterTospawnCharacterList(AICharacterManager character)
+    {
+        if (spawnedInCharacters.Contains(character))
+        {
+            return;
+        }
+
+        spawnedInCharacters.Add(character);
+
+        AIBossManager bossCharacter = character.GetComponent<AIBossManager>();
+
+        if (bossCharacter != null)
+        {
+            if (!spawnedInBoss.Contains(bossCharacter))
+            {
+                spawnedInBoss.Add(bossCharacter);
+            }
+        }
+    }
+
+    public AIBossManager GetBossCharacterByID(int ID)
+    {
+        return spawnedInBoss.FirstOrDefault(boss => boss.bossID == ID);
+    }
+
     private void SpawnAllCharacters()
     {
-        foreach (var character in aiCharacters)
+        if (aiCharacters == null || aiCharacters.Length == 0)
         {
-            GameObject instantiatedCharacter = Instantiate(character);
-            spawnedInCharacters.Add(instantiatedCharacter);
+            return;
+        }
+
+        foreach (var characterPrefab in aiCharacters)
+        {
+            if (characterPrefab == null) continue;
+
+            GameObject instantiatedCharacter = Instantiate(characterPrefab);
+            Debug.Log($"กำลังเสก: {characterPrefab.name}");
+            AICharacterManager aiScript = instantiatedCharacter.GetComponent<AICharacterManager>();
+
+            if (aiScript != null)
+            {
+                AddCharacterTospawnCharacterList(aiScript);
+            }
         }
     }
 
@@ -70,7 +113,7 @@ public class WorldAIManager : MonoBehaviour
     {
         foreach (var character in spawnedInCharacters)
         {
-            Destroy(character);
+            Destroy(character.gameObject);
         }
     }
 

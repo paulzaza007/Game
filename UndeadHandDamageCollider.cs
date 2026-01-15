@@ -33,7 +33,7 @@ public class UndeadHandDamageCollider : DamageCollider
         damageEffect.holyDamage = holyDamage;
         damageEffect.contactPoint = contactPoint;
         //damageEffect.angleHitFrom = Vector3.SignedAngle(undeadCausingDamage.transform.forward, damageTarget.transform.forward, Vector3.up);
-        damageTarget.playerEffectManager.ProcessInstantEffect(damageEffect);
+        damageTarget.characterEffectManager.ProcessInstantEffect(damageEffect);
 
 
         //Player.instance.playerEffectManager.ProcessInstantEffect(damageEffect);

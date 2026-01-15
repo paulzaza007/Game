@@ -1,100 +1,57 @@
 using UnityEngine;
 using System.Collections;
 
-public class PlayerCombatManager : MonoBehaviour
+public class PlayerCombatManager : CharacterCombatManager
 {
-    protected Player player;
-
-    [Header("Last Attack Animation Perform")]
-    public string lastAttackAnimationPerform;
-
-    [Header("Attack Target")]
-    public Player currentTarget;
-    public AICharacterManager lockedOnEnemy;
-
-    [Header("Attack Type")]
-    public AttackType currentAttackType;
-
-    [Header("Lock On Target Transform")]
-    public Transform LockOnTargetTransform;
-
-    public WeaponItem currentWeaponBeingUsed;
-
-    [Header("Flags")]
-    public bool canComboWithMainHandWeapon = false;
-    //public bool canComboWithOffHandWeapon = false;
-
     [Header("Attack Cooldown")]
     [SerializeField] public bool readyToPerformAttack = true;
     [SerializeField] float waitingTime = 2;
 
-    [SerializeField] public bool doAnotherAttack = false;
-
-
-    protected virtual void Awake()
-    {
-        player = GetComponent<Player>();
-    }
-
-
-    public void PerformWeaponBasedAction(WeaponItemAction weaponAction, WeaponItem weaponPerformingAction)
-    {
-        currentWeaponBeingUsed = weaponPerformingAction;
-
-        if (weaponAction != null)
-        {
-            weaponAction.AttemptToPerformAction(player, weaponPerformingAction);
-        }
-    }
+    [Header("Attack Flags")]
+    public bool canPerformRollingAttack = false;
 
     public void DrainStaminaBasedOnAttack()
     {
-        if(currentWeaponBeingUsed == null)
+        if (currentWeaponBeingUsed == null)
         {
             return;
         }
 
         float staminaDeducted = 0;
 
+
+
         switch (currentAttackType)
         {
             case AttackType.LightAttack01:
-                staminaDeducted = currentWeaponBeingUsed.baseStaminaCost * currentWeaponBeingUsed.light_Attack_01_Modifier;
+                staminaDeducted = currentWeaponBeingUsed.baseStaminaCost * currentWeaponBeingUsed.lightattackStaminaCostMultiplier;
                 break;
-            default:
+            case AttackType.LightAttack02:
+                staminaDeducted = currentWeaponBeingUsed.baseStaminaCost * currentWeaponBeingUsed.lightattackStaminaCostMultiplier;
+                break;
+            case AttackType.LightAttack03:
+                staminaDeducted = currentWeaponBeingUsed.baseStaminaCost * currentWeaponBeingUsed.lightattackStaminaCostMultiplier;
+                break;
+            case AttackType.HeavyAttack01:
+                staminaDeducted = currentWeaponBeingUsed.baseStaminaCost * currentWeaponBeingUsed.heavyattackStaminaCostMultiplier;
+                break;
+            case AttackType.ChargeAttack01:
+                staminaDeducted = currentWeaponBeingUsed.baseStaminaCost * currentWeaponBeingUsed.chargeattackStaminaCostMultiplier;
+                break;
+            case AttackType.ChargeAttack02:
+                staminaDeducted = currentWeaponBeingUsed.baseStaminaCost * currentWeaponBeingUsed.chargeattackStaminaCostMultiplier;
+                break;
+            case AttackType.RunningAttack:
+                staminaDeducted = currentWeaponBeingUsed.baseStaminaCost * currentWeaponBeingUsed.runningattackStaminaCostMultiplier;
+                break;
+            case AttackType.RollingAttack:
+                staminaDeducted = currentWeaponBeingUsed.baseStaminaCost * currentWeaponBeingUsed.rollingattackStaminaCostMultiplier;
                 break;
         }
-
-        player.playerStatManager.currentStamina -= Mathf.RoundToInt(staminaDeducted);
+        player.playerStatManager.CurrentStamina -= Mathf.RoundToInt(staminaDeducted);
         //Debug.Log(staminaDeducted + "Stamina has been used");
     }
 
-    public void SetLockOnTarget(AICharacterManager newTarget)
-    {
-        if(newTarget != null)
-        {
-            lockedOnEnemy = newTarget;
-            CameraPlayer.instance.SetLockCameraHeight();
-        }
-        else
-        {
-            lockedOnEnemy = null;
-            CameraPlayer.instance.SetLockCameraHeight();
-        }
-    }
-
-    // 2. ฟังก์ชันสำหรับ "AI" ใช้เล็งเป้า "ผู้เล่น"
-    public void SetAttackTarget(Player newTarget)
-    {
-        if(newTarget != null)
-        {
-            currentTarget = newTarget;
-        }
-        else
-        {
-            currentTarget = null;
-        }
-    }
 
     public void AttackCoolDown()
     {
@@ -110,13 +67,65 @@ public class PlayerCombatManager : MonoBehaviour
         readyToPerformAttack = true;
     }
 
-    public void EnableIsInvulnerable()
+    private Coroutine closeComboCoroutine;
+    [HideInInspector] public bool canWeDoAnotherAttack = false;
+
+    public void EnableCanDoCombo()
     {
-        player.playerCurrentState.isInvulnerable = true;
+        canWeDoAnotherAttack = true;
+        PlayerManager.instance.playerCombatManager.canComboWithMainHandWeapon = true;
+        if (closeComboCoroutine != null)
+        {
+            StopCoroutine(closeComboCoroutine);
+        }
+
+        closeComboCoroutine = StartCoroutine(CloseCombo());
+        
+
     }
 
-    public void DisableIsInvulnerable()
+    private IEnumerator CloseCombo()
     {
-        player.playerCurrentState.isInvulnerable = false;
+        float timer = 0;
+        float duration = 1.5f;
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        DisableCanDoCombo();
+        closeComboCoroutine = null;
     }
+
+    public void DisableCanDoCombo()
+    {
+        PlayerManager.instance.playerCombatManager.canComboWithMainHandWeapon = false;
+        canWeDoAnotherAttack = false;
+        //Debug.Log("ยกเลิกคอมโบ");
+    }
+
+
+    public void CheckingCombo()
+    {
+        if (PlayerManager.instance.playerCombatManager.doAnotherAttack) //รอรับจากLC
+        {
+            PlayerManager.instance.playerCombatManager.canComboWithMainHandWeapon = true;
+            PlayerManager.instance.playerCombatManager.PerformWeaponBasedAction(PlayerManager.instance.playerInventoryManager.currentRightHandWeapon.oh_LC_Action, PlayerManager.instance.playerInventoryManager.currentRightHandWeapon);
+            Debug.Log("รันคอมโบอีกครั้ง");
+        }
+        PlayerManager.instance.playerCombatManager.doAnotherAttack = false;
+    }
+
+    public void EnableCanDoRollingAttack()
+    {
+        canPerformRollingAttack = true;
+    }
+
+    public void DisableCanDoRollingAttack()
+    {
+        canPerformRollingAttack = false;
+    }
+
+
 }

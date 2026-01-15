@@ -11,6 +11,10 @@ public class PlayerUIHUDManager : MonoBehaviour
     [SerializeField] Image rightWeaponQuickSlotIcon;
     [SerializeField] Image leftWeaponQuickSlotIcon;
 
+    [Header("BOSS HEALTH BAR")]
+    public GameObject bossHealthBarObject;  
+    public Transform bossHealthBarParent;
+
     public void RefeshHUD()
     {
         healthBar.gameObject.SetActive(false);
@@ -19,26 +23,26 @@ public class PlayerUIHUDManager : MonoBehaviour
         staminaBar.gameObject.SetActive(true);
     }
     
-    public void SetNewHealthValue(float oldValue, float newValue)
+    public void SetNewHealthValue(int oldValue, int newValue)
     {
         healthBar.SetStat(newValue);
     }
 
-    public void SetMaxHealthValue(float maxHealth)
+    public void SetMaxHealthValue(int maxHealth)
     {
-        healthBar.SetMaxStat(maxHealth);
+        healthBar.SetMaxStat((float)maxHealth);
         
     }
     
-    public void SetNewStaminaValue(float oldValue, float newValue)
+    public void SetNewStaminaValue(int oldValue, int newValue)
     {
         staminaBar.SetStat(newValue);
         //Debug.Log(newValue);
     }
 
-    public void SetMaxStaminaValue(float maxStamina)
+    public void SetMaxStaminaValue(int maxStamina)
     {
-        staminaBar.SetMaxStat(maxStamina);
+        staminaBar.SetMaxStat((float)maxStamina);
         
     }
 

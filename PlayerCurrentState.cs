@@ -46,16 +46,16 @@ public class PlayerCurrentState : CharacterCurrentState
 
     private IEnumerator WaitToMove()
     {
-        float timeSpentRunning = Player.instance.playerMovement.runningTime; 
+        float timeSpentRunning = PlayerManager.instance.playerMovement.runningTime; 
 
-        if (Player.instance.characterController.isGrounded && timeSpentRunning > runToSlideTiming)
+        if (PlayerManager.instance.characterController.isGrounded && timeSpentRunning > runToSlideTiming)
         {
-            Player.instance.animator.CrossFade("RunToStop", 0.3f);
+            PlayerManager.instance.animator.CrossFade("RunToStop", 0.3f);
             canMove = false;
             canRotate = false;
             isPerformingAction = true;
 
-            Vector3 slideDirection = Player.instance.transform.forward;
+            Vector3 slideDirection = PlayerManager.instance.transform.forward;
             float timer = 0;
 
             while (timer < slideDuration)
@@ -66,7 +66,7 @@ public class PlayerCurrentState : CharacterCurrentState
 
                 moveVelocity.y = -9.81f;
 
-                Player.instance.characterController.Move(moveVelocity * Time.deltaTime);
+                PlayerManager.instance.characterController.Move(moveVelocity * Time.deltaTime);
 
                 timer += Time.deltaTime;
 
@@ -77,7 +77,7 @@ public class PlayerCurrentState : CharacterCurrentState
         canRotate = true;
         isPerformingAction = false;
 
-        Player.instance.playerMovement.runningTime = 0;
+        PlayerManager.instance.playerMovement.runningTime = 0;
     }
 }
 

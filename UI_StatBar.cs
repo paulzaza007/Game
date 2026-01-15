@@ -4,8 +4,8 @@ using UnityEngine.UI;
 
 public class UI_StatBar : MonoBehaviour
 {
-    private Slider slider;
-    private RectTransform rectTransform;
+    protected Slider slider;
+    protected RectTransform rectTransform;
 
     [Header("Bar Options")]
     [SerializeField] protected bool scaleBarLengthWithStats = true;
@@ -17,10 +17,15 @@ public class UI_StatBar : MonoBehaviour
         rectTransform = GetComponent<RectTransform>();
     }
 
-    public virtual void SetStat(float newValue)
+    protected virtual void Start()
     {
-        slider.value = newValue;
-        //Debug.Log(newValue);
+        
+    }
+
+    public virtual void SetStat(int newValue)
+    {
+        slider.value = newValue;    
+        Debug.Log(newValue);
     }
 
     public virtual void SetMaxStat(float maxValue)

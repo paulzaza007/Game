@@ -27,10 +27,17 @@ public class WeaponItem : Item
     public float light_Attack_03_Modifier = 1.3f;
     public float heavy_Attack_01_Modifier = 1.5f;
     public float charge_Attack_01_Modifier = 2f;
+    public float running_Attack_01_Modifier = 1.2f;
+    public float rolling_Attack_01_Modifier = 1.25f;
+
 
     [Header("Stamina Cost Modifiers")]
     public int baseStaminaCost = 5;
     public float lightattackStaminaCostMultiplier = 0.9f;
+    public float heavyattackStaminaCostMultiplier = 1.3f;
+    public float chargeattackStaminaCostMultiplier = 1.4f;
+    public float runningattackStaminaCostMultiplier = 1.1f;
+    public float rollingattackStaminaCostMultiplier = 1.2f;
 
     [Header("Actions")]
     public WeaponItemAction oh_LC_Action;

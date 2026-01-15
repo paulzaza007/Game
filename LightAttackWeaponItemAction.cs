@@ -6,12 +6,19 @@ using UnityEngine;
 
 public class LightAttackWeaponItemAction : WeaponItemAction
 {
+    [Header("Light Attack")]
     [SerializeField] string light_Attack_01 = "Main_light_Attack_01"; //MainHand
     [SerializeField] string light_Attack_02 = "Main_light_Attack_02";
     [SerializeField] string light_Attack_03 = "Main_light_Attack_03";
 
+    [Header("Running Attack")]
+    [SerializeField] string run_Attack_01 = "Main_Run_Attack_01";
 
-    public override void AttemptToPerformAction(Player playerPerformingAction, WeaponItem weaponPerformingAction)
+    [Header("RollingAttack")]
+    [SerializeField] string roll_Attack_01 = "Main_Roll_Attack_01";
+
+
+    public override void AttemptToPerformAction(PlayerManager playerPerformingAction, WeaponItem weaponPerformingAction)
     {
         base.AttemptToPerformAction(playerPerformingAction, weaponPerformingAction);
 
@@ -23,11 +30,21 @@ public class LightAttackWeaponItemAction : WeaponItemAction
         {
             return;
         }
+        if (playerPerformingAction.playerMovement.isRunning && !playerPerformingAction.playerCurrentState.isPerformingAction)
+        {
+            PerformRunningLightAttack(playerPerformingAction, weaponPerformingAction);
+            return;
+        }
+        if (playerPerformingAction.playerCombatManager.canPerformRollingAttack)
+        {
+            PerformRollingLightAttack(playerPerformingAction, weaponPerformingAction);
+            return;
+        }
 
         PerformLightAttack(playerPerformingAction, weaponPerformingAction);
     }
 
-    private void PerformLightAttack(Player playerPerformingAction, WeaponItem weaponPerformingAction)
+    private void PerformLightAttack(PlayerManager playerPerformingAction, WeaponItem weaponPerformingAction) //ตีปกติ
     {
         var lastAttack = playerPerformingAction.playerCombatManager.lastAttackAnimationPerform;
         var lastAttackType = playerPerformingAction.playerCombatManager.currentAttackType;
@@ -37,10 +54,8 @@ public class LightAttackWeaponItemAction : WeaponItemAction
         {
             playerPerformingAction.playerCombatManager.canComboWithMainHandWeapon = false;
 
-            if(lastAttack == light_Attack_01 && lastAttackType == AttackType.LightAttack01)
+            if(lastAttack == light_Attack_01 && lastAttackType == AttackType.LightAttack01 || lastAttack == roll_Attack_01 || lastAttack == run_Attack_01)
             {
-                Debug.Log("1. ชื่อไฟล์ Action ที่ใช้: " + this.name); // จะโชว์ชื่อไฟล์ ScriptableObject
-                Debug.Log("2. ชื่อ String ที่จะส่งไปสั่ง Animator: " + light_Attack_02);
                 player.PlayerTargetAttackActionAnimation(playerPerformingAction,AttackType.LightAttack02, light_Attack_02, true);
             }
 
@@ -59,7 +74,20 @@ public class LightAttackWeaponItemAction : WeaponItemAction
 
     }
 
-    
+    private void PerformRunningLightAttack(PlayerManager playerPerformingAction, WeaponItem weaponPerformingAction) //วิ่งตี
+    {
+        playerPerformingAction.playerAnimatorManager.PlayerTargetAttackActionAnimation(playerPerformingAction, AttackType.RunningAttack, run_Attack_01, true);
+
+    }
+
+    private void PerformRollingLightAttack(PlayerManager playerPerformingAction, WeaponItem weaponPerformingAction) //กลิ้งตี
+    {
+        playerPerformingAction.playerCombatManager.canPerformRollingAttack = false;
+        playerPerformingAction.playerAnimatorManager.PlayerTargetAttackActionAnimation(playerPerformingAction, AttackType.RollingAttack, roll_Attack_01, true);
+      
+    }
+
+
 
 
 }

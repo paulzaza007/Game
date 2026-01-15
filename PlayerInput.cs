@@ -23,6 +23,7 @@ public class PlayerInput : MonoBehaviour
     [SerializeField] bool LC_Input = false;
     [SerializeField] bool switchRightWeapon_Input = false;
     [SerializeField] bool switchLeftWeapon_Input = false;
+    [SerializeField] bool interaction_Input = false;
 
     [Header("LOCK ON TARGET INPUT")]
     [SerializeField] bool lockTarget_Input;
@@ -62,21 +63,22 @@ public class PlayerInput : MonoBehaviour
         //Sprint Input
         playerInput.Player.Sprint.performed += context =>
         {
-            Player.instance.playerMovement.isRunning = true;
+            PlayerManager.instance.playerMovement.isRunning = true;
         };
 
         playerInput.Player.Sprint.canceled += context =>
         {
-            Player.instance.playerMovement.isRunning = false;
+            PlayerManager.instance.playerMovement.isRunning = false;
         };
 
         //Jump Input
         playerInput.Player.Jump.performed += context => preventJumpTwice();
 
-
+        //Interaction
+        playerInput.Player_Actions.Interact.performed += context => interaction_Input = true;
 
         //Dodge Input
-        playerInput.Player_Actions.Dodge.performed += context => Player.instance.playerDodge.dodgeInput = true;
+        playerInput.Player_Actions.Dodge.performed += context => PlayerManager.instance.playerDodge.dodgeInput = true;
 
         //Attack Input
         playerInput.Player_Actions.LC.performed += context => LC_Input = true;
@@ -97,13 +99,11 @@ public class PlayerInput : MonoBehaviour
         //Switch Right Weapon
         playerInput.Player_Actions.SwitchRightWeapon.performed += context => switchRightWeapon_Input = true;
 
-        // Switch Right Weapon
-        playerInput.Player_Actions.SwitchLeftWeapon.performed += context => switchLeftWeapon_Input = true;
-
     }
 
     private void Update()
     {
+        //ควบคุมทุก input
         MovementInput();
         CameraMovementInput();
         HandleLCInput();
@@ -111,7 +111,7 @@ public class PlayerInput : MonoBehaviour
         HandleRCInput();
         HandleChargeRCInput();
         HandleSwitchRightWeaponInput();
-        HandleSwitchLeftWeaponInput();
+        HandleInteractionInput();
     }
 
     private void MovementInput()
@@ -134,11 +134,11 @@ public class PlayerInput : MonoBehaviour
 
     private void preventJumpTwice()
     {
-        if (!Player.instance.playerCurrentState.isJumping
-        && !Player.instance.playerCurrentState.isPerformingAction
-        && Player.instance.playerStatManager.currentStamina >= Player.instance.playerMovement.jumpStaminaCost)
+        if (!PlayerManager.instance.playerCurrentState.isJumping
+        && !PlayerManager.instance.playerCurrentState.isPerformingAction
+        && PlayerManager.instance.playerStatManager.currentStamina >= PlayerManager.instance.playerMovement.jumpStaminaCost)
         {
-            StartCoroutine(Player.instance.playerMovement.DelayJump()); ;
+            StartCoroutine(PlayerManager.instance.playerMovement.DelayJump()); ;
         }
     }
 
@@ -148,15 +148,13 @@ public class PlayerInput : MonoBehaviour
         {
             LC_Input = false;
 
-            Player.instance.SetPlayerActionHand(true);
-
-            if (Player.instance.playerAnimatorManager.canWeDoAnotherAttack)
+            if (PlayerManager.instance.playerCombatManager.canWeDoAnotherAttack)
             {
-                Player.instance.playerCombatManager.doAnotherAttack = true;
+                PlayerManager.instance.playerCombatManager.doAnotherAttack = true;
             }
             else
             {
-                Player.instance.playerCombatManager.PerformWeaponBasedAction(Player.instance.playerInventoryManager.currentRightHandWeapon.oh_LC_Action, Player.instance.playerInventoryManager.currentRightHandWeapon);
+                PlayerManager.instance.playerCombatManager.PerformWeaponBasedAction(PlayerManager.instance.playerInventoryManager.currentRightHandWeapon.oh_LC_Action, PlayerManager.instance.playerInventoryManager.currentRightHandWeapon);
 
             }
         }
@@ -165,10 +163,10 @@ public class PlayerInput : MonoBehaviour
     private void HandleLockOnInput()
     {
         // เช็คว่าสถานะล็อคเปิดอยู่ไหม
-        if (Player.instance.playerCurrentState.isLockTarget)
+        if (PlayerManager.instance.playerCurrentState.isLockTarget)
         {
 
-            var combatManager = Player.instance.playerCombatManager;
+            var combatManager = PlayerManager.instance.playerCombatManager;
             // 1. ดึงตัวจัดการการต่อสู้มาก่อน (เพื่อความชัวร์)
             if (combatManager == null) return; // กันเหนียว
 
@@ -177,7 +175,7 @@ public class PlayerInput : MonoBehaviour
             {
                 // ถ้าไม่มีเป้า -> สั่งปลดล็อค
                 Debug.Log("Unlock: No Enemy Found");
-                Player.instance.playerCurrentState.isLockTarget = false;
+                PlayerManager.instance.playerCurrentState.isLockTarget = false;
                 combatManager.SetLockOnTarget(null);
                 CameraPlayer.instance.nearestLockOnTarget = null;
                 return;
@@ -191,7 +189,7 @@ public class PlayerInput : MonoBehaviour
                 Debug.LogError("ERROR: ศัตรูชื่อ " + combatManager.lockedOnEnemy.name + " ไม่มีตัวแปร playerCurrentState (เป็น Null)!");
 
                 // สั่งปลดล็อคฉุกเฉินเพื่อกันเกมค้าง
-                Player.instance.playerCurrentState.isLockTarget = false;
+                PlayerManager.instance.playerCurrentState.isLockTarget = false;
                 combatManager.SetLockOnTarget(null);
                 return;
             }
@@ -201,7 +199,7 @@ public class PlayerInput : MonoBehaviour
             {
                 
                 Debug.Log("Unlock: Enemy is Dead");
-                Player.instance.playerCurrentState.isLockTarget = false;
+                PlayerManager.instance.playerCurrentState.isLockTarget = false;
                 combatManager.SetLockOnTarget(null);
                 CameraPlayer.instance.nearestLockOnTarget = null;
                 if (lockOnCoroutine != null)
@@ -216,16 +214,16 @@ public class PlayerInput : MonoBehaviour
         // -------------------------------------------------------------
         // ส่วนกดปุ่ม Manual Unlock / Lock (เหมือนเดิม)
         // -------------------------------------------------------------
-        if (lockTarget_Input && Player.instance.playerCurrentState.isLockTarget)
+        if (lockTarget_Input && PlayerManager.instance.playerCurrentState.isLockTarget)
         {
             lockTarget_Input = false;
-            Player.instance.playerCurrentState.isLockTarget = false;
-            Player.instance.playerCombatManager.SetLockOnTarget(null);
+            PlayerManager.instance.playerCurrentState.isLockTarget = false;
+            PlayerManager.instance.playerCombatManager.SetLockOnTarget(null);
             CameraPlayer.instance.nearestLockOnTarget = null;
             return;
         }
 
-        if (lockTarget_Input && !Player.instance.playerCurrentState.isLockTarget)
+        if (lockTarget_Input && !PlayerManager.instance.playerCurrentState.isLockTarget)
         {
             lockTarget_Input = false;
 
@@ -233,8 +231,8 @@ public class PlayerInput : MonoBehaviour
 
             if (CameraPlayer.instance.nearestLockOnTarget != null)
             {
-                Player.instance.playerCombatManager.SetLockOnTarget(CameraPlayer.instance.nearestLockOnTarget);
-                Player.instance.playerCurrentState.isLockTarget = true;
+                PlayerManager.instance.playerCombatManager.SetLockOnTarget(CameraPlayer.instance.nearestLockOnTarget);
+                PlayerManager.instance.playerCurrentState.isLockTarget = true;
             }
         }
     }
@@ -245,25 +243,23 @@ public class PlayerInput : MonoBehaviour
         {
             RC_Input = false;
 
-            Player.instance.SetPlayerActionHand(true);
+            PlayerManager.instance.playerCombatManager.PerformWeaponBasedAction(PlayerManager.instance.playerInventoryManager.currentRightHandWeapon.oh_RC_Action, PlayerManager.instance.playerInventoryManager.currentRightHandWeapon);
 
-            Player.instance.playerCombatManager.PerformWeaponBasedAction(Player.instance.playerInventoryManager.currentRightHandWeapon.oh_RC_Action, Player.instance.playerInventoryManager.currentRightHandWeapon);
-
-            Player.instance.IsChargingAttack = false;
+            PlayerManager.instance.IsChargingAttack = false;
         }
     }
 
     private void HandleChargeRCInput()
     {
-        if (Player.instance.playerCurrentState.isPerformingAction)
+        if (PlayerManager.instance.playerCurrentState.isPerformingAction)
         {
-            if (Player.instance.isUsingRightHand && HoldRC_Input)
+            if (HoldRC_Input)
             {
-                Player.instance.IsChargingAttack = true;
+                PlayerManager.instance.IsChargingAttack = true;
             }
             else
             {
-                Player.instance.IsChargingAttack = false;
+                PlayerManager.instance.IsChargingAttack = false;
             }
         }
     }
@@ -274,16 +270,17 @@ public class PlayerInput : MonoBehaviour
         if (switchRightWeapon_Input)
         {
             switchRightWeapon_Input = false;
-            Player.instance.playerEquipmentManager.SwitchRightWeapon();
+            PlayerManager.instance.playerEquipmentManager.SwitchRightWeapon();
         }
     }
 
-    private void HandleSwitchLeftWeaponInput()
+    private void HandleInteractionInput()
     {
-        if (switchLeftWeapon_Input)
+        if (interaction_Input)
         {
-            switchLeftWeapon_Input = false;
-            Player.instance.playerEquipmentManager.SwitchLeftWeapon();
+            interaction_Input = false;
+            
+            PlayerManager.instance.playerInteractionManager.Interact();
         }
     }
 }

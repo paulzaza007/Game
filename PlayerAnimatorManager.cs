@@ -25,6 +25,25 @@ public class PlayerAnimatorManger : MonoBehaviour
     public List<string> right_Midium_Damage = new List<string>();
     public List<string> left_Midium_Damage = new List<string>();
 
+    [Header("Debug")]
+    [SerializeField] bool rootmotion = false;
+
+    private void Update()
+    {
+        DebugRootMotion();
+    }
+
+    private void DebugRootMotion()
+    {
+        if (rootmotion)
+        {
+            PlayerManager.instance.animator.applyRootMotion = true;
+        }
+        else
+        {
+            PlayerManager.instance.animator.applyRootMotion = false;
+        }
+    }
 
     protected virtual void Awake()
     {
@@ -70,8 +89,8 @@ public class PlayerAnimatorManger : MonoBehaviour
 
     public void UpdateAnimatorMovement(float horizontalValue, float verticalValue)
     {
-        Player.instance.animator.SetFloat("Horizontal", horizontalValue, 0.1f, Time.deltaTime);
-        Player.instance.animator.SetFloat("Vertical", verticalValue, 0.1f, Time.deltaTime);
+        PlayerManager.instance.animator.SetFloat("Horizontal", horizontalValue, 0.1f, Time.deltaTime);
+        PlayerManager.instance.animator.SetFloat("Vertical", verticalValue, 0.1f, Time.deltaTime);
     }
 
     public void PlayerTargetActionAnimation(
@@ -81,19 +100,19 @@ public class PlayerAnimatorManger : MonoBehaviour
         bool canRotate = false,
         bool canMove = false)
     {
-        Player.instance.playerCurrentState.isPerformingAction = performingActionFlag;
-        Player.instance.playerCurrentState.applyRootMotion = applyRootMotion;
-        Player.instance.playerCurrentState.canRotate = canRotate;
-        Player.instance.playerCurrentState.canMove = canMove;
+        PlayerManager.instance.playerCurrentState.isPerformingAction = performingActionFlag;
+        PlayerManager.instance.playerCurrentState.applyRootMotion = applyRootMotion;
+        PlayerManager.instance.playerCurrentState.canRotate = canRotate;
+        PlayerManager.instance.playerCurrentState.canMove = canMove;
 
         //เปิด Root Motion ใน Animator
-        Player.instance.animator.applyRootMotion = applyRootMotion;
+        PlayerManager.instance.animator.applyRootMotion = applyRootMotion;
 
-        Player.instance.animator.CrossFade(targetAnimation, 0.2f);
+        PlayerManager.instance.animator.CrossFade(targetAnimation, 0.2f);
     }
 
     public void PlayerTargetAttackActionAnimation(
-        Player player,
+        PlayerManager player,
         AttackType attackType,
         string targetAnimation,
         bool performingActionFlag,
@@ -112,60 +131,5 @@ public class PlayerAnimatorManger : MonoBehaviour
         player.animator.applyRootMotion = applyRootMotion;
 
         player.animator.CrossFade(targetAnimation, 0.2f);
-    }
-
-    private Coroutine closeComboCoroutine;
-    [HideInInspector] public bool canWeDoAnotherAttack = false;
-
-    public void EnableCanDoCombo()
-    {
-        canWeDoAnotherAttack = true;
-        if (Player.instance.isUsingRightHand)
-        {
-            Player.instance.playerCombatManager.canComboWithMainHandWeapon = true;
-            if (closeComboCoroutine != null)
-            {
-                StopCoroutine(closeComboCoroutine);
-            }
-
-            closeComboCoroutine = StartCoroutine(CloseCombo());
-        }
-        else
-        {
-
-        }
-    }
-
-    private IEnumerator CloseCombo()
-    {
-        float timer = 0;
-        float duration = 1.5f;
-        while (timer < duration)
-        {
-            timer += Time.deltaTime;
-            yield return null;
-        }
-       
-        DisableCanDoCombo();
-        closeComboCoroutine = null;
-    }
-
-    public void DisableCanDoCombo()
-    {
-        Player.instance.playerCombatManager.canComboWithMainHandWeapon = false;
-        canWeDoAnotherAttack = false;
-        //Debug.Log("ยกเลิกคอมโบ");
-    }
-
-
-    public void CheckingCombo()
-    {
-        if (Player.instance.playerCombatManager.doAnotherAttack)
-        {
-            Player.instance.playerCombatManager.canComboWithMainHandWeapon = true;
-            Player.instance.playerCombatManager.PerformWeaponBasedAction(Player.instance.playerInventoryManager.currentRightHandWeapon.oh_LC_Action, Player.instance.playerInventoryManager.currentRightHandWeapon);
-            Debug.Log("รันคอมโบอีกครั้ง");
-        }
-        Player.instance.playerCombatManager.doAnotherAttack = false;
     }
 }

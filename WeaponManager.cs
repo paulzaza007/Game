@@ -23,5 +23,7 @@ public class WeaponManager : MonoBehaviour
         meleeWeaponDamageCollider.light_Attack_03_Modifier = weaponItem.light_Attack_03_Modifier;
         meleeWeaponDamageCollider.heavy_Attack_01_Modifier = weaponItem.heavy_Attack_01_Modifier;
         meleeWeaponDamageCollider.charge_Attack_01_Modifier = weaponItem.charge_Attack_01_Modifier;
+        meleeWeaponDamageCollider.running_Attack_01_Modifier = weaponItem.running_Attack_01_Modifier;
+        meleeWeaponDamageCollider.rolling_Attack_01_Modifier = weaponItem.rolling_Attack_01_Modifier;
     }
 }

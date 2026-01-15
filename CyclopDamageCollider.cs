@@ -31,6 +31,6 @@ public class CyclopDamageCollider : DamageCollider
         damageEffect.lightningDamage = lightningDamage;
         damageEffect.holyDamage = holyDamage;
         damageEffect.contactPoint = contactPoint;
-        damageTarget.playerEffectManager.ProcessInstantEffect(damageEffect);
+        damageTarget.characterEffectManager.ProcessInstantEffect(damageEffect);
     }
 }
